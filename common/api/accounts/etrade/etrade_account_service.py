@@ -4,11 +4,12 @@ from common.api.accounts.account_service import AccountService
 from common.api.accounts.get_account_info_request import GetAccountInfoRequest
 from common.api.accounts.get_account_info_response import GetAccountInfoResponse
 from common.exchange.connector import Connector
+from common.exchange.etrade.etrade_connector import ETradeConnector
 
 
 class ETradeAccountService(AccountService):
 
-    def __init__(self, connector: Connector):
+    def __init__(self, connector: ETradeConnector):
         super().__init__(connector)
         self.session, self.base_url = self.connector.load_connection()
 
