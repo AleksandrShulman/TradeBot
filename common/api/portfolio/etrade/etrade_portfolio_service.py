@@ -18,10 +18,13 @@ DEFAULT_SORT_ORDER = "ASC"
 
 DEFAULT_VIEW = "COMPLETE"
 
+DEFAULT_NUM_POSITIONS = 1000
+
 DEFAULT_PORTFOLIO_OPTIONS = {
     "sortBy": DEFAULT_SORT_BY,
     "sortOrder": DEFAULT_SORT_ORDER,
-    "view": DEFAULT_VIEW
+    "view": DEFAULT_VIEW,
+    "count": str(DEFAULT_NUM_POSITIONS)
 }
 
 
@@ -30,19 +33,18 @@ class ETradePortfolioService(PortfolioService):
         super().__init__(connector)
         self.session, self.base_url = self.connector.load_connection()
 
-    def get_portfolio_info(self, get_portfolio_request: GetPortfolioRequest, options:dict[str, str] = DEFAULT_PORTFOLIO_OPTIONS) -> GetPortfolioResponse:
+    def get_portfolio_info(self, get_portfolio_request: GetPortfolioRequest, exchange_specific_options: dict[str, str] = DEFAULT_PORTFOLIO_OPTIONS) -> GetPortfolioResponse:
         account_id = get_portfolio_request.account_id
         count = get_portfolio_request.count
 
         path = f"/v1/accounts/{account_id}/portfolio.json?"
 
-        if options:
-            options["count"] = count
+        if exchange_specific_options:
             options_str = ",".join(f"{k}={v}" for k,v in options.items())
         else:
-            options_str = f"count={count}"
+            options_str = f"count={DEFAULT_NUM_POSITIONS}"
 
-        path += options_str
+        path += f"?{options_str}"
 
         url = self.base_url + path
         response = self.session.get(url)

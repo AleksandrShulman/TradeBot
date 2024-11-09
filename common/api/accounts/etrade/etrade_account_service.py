@@ -3,7 +3,6 @@ from common.api.accounts.account_list_response import AccountListResponse
 from common.api.accounts.account_service import AccountService
 from common.api.accounts.get_account_info_request import GetAccountInfoRequest
 from common.api.accounts.get_account_info_response import GetAccountInfoResponse
-from common.exchange.connector import Connector
 from common.exchange.etrade.etrade_connector import ETradeConnector
 
 
@@ -47,7 +46,7 @@ class ETradeAccountService(AccountService):
         accounts: list[Account] = account_list_response["Accounts"]
 
         return_accounts = map(lambda account: Account(account["accountId"],
-                                             account["accountName"], account["accountDesc"]), accounts["Account"])
+                                                    account["accountName"], account["accountDesc"]), accounts["Account"])
 
         return AccountListResponse(list(filter(f, return_accounts)))
 

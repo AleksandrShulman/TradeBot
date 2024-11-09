@@ -12,6 +12,5 @@ class PortfolioService(ABC):
     def list_portfolios(self):
         pass
 
-    def get_portfolio_info(self, get_portfolio_request: GetPortfolioRequest):
+    def get_portfolio_info(self, get_portfolio_request: GetPortfolioRequest, exchange_specific_options: dict[str, str]):
         pass
-    pass
