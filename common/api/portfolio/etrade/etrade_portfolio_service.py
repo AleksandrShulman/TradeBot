@@ -35,12 +35,11 @@ class ETradePortfolioService(PortfolioService):
 
     def get_portfolio_info(self, get_portfolio_request: GetPortfolioRequest, exchange_specific_options: dict[str, str] = DEFAULT_PORTFOLIO_OPTIONS) -> GetPortfolioResponse:
         account_id = get_portfolio_request.account_id
-        count = get_portfolio_request.count
 
-        path = f"/v1/accounts/{account_id}/portfolio.json?"
+        path = f"/v1/accounts/{account_id}/portfolio.json"
 
         if exchange_specific_options:
-            options_str = ",".join(f"{k}={v}" for k,v in options.items())
+            options_str = ",".join(f"{k}={v}" for k,v in exchange_specific_options.items())
         else:
             options_str = f"count={DEFAULT_NUM_POSITIONS}"
 
