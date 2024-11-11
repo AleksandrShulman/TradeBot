@@ -1,3 +1,4 @@
+integration_test_properties.ini
 ./common/exchange/etrade/etrade_session.out
 common/exchange/etrade/etrade_session.out
 *.pyc
