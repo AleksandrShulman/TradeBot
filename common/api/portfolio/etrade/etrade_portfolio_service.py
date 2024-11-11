@@ -71,7 +71,7 @@ class ETradePortfolioService(PortfolioService):
                 quantity = position["quantity"]
                 return_portfolio.add_position(tradable, quantity)
 
-        GetPortfolioResponse(return_portfolio)
+        return GetPortfolioResponse(return_portfolio)
 
     @staticmethod
     def _get_tradable_from_position(position) -> Tradable:
