@@ -1,5 +1,3 @@
-import datetime
-
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_request import OrderListRequest
@@ -17,12 +15,13 @@ class ETradeOrderService(OrderService):
         self.session, self.base_url = self.connector.load_connection()
 
     def list_orders(self, list_orders_request: OrderListRequest, exchange_specific_opts: dict[str, str]) -> OrderListResponse:
-        account_id = list_orders_request.account_id
+        #account_id = list_orders_request.account_id
+        account_id = 472420319
         path = f"/v1/accounts/{account_id}/orders.json"
         count = list_orders_request.count
 
-        options_str = f"count={count}"
-        if list_orders_request.exchange_specific_opts:
+        options_str = f"?count={count}"
+        if exchange_specific_opts:
             options_str_addendum = ",".join(f"{k}={v}" for k, v in list_orders_request.items())
             options_str += options_str_addendum
 
@@ -42,4 +41,5 @@ class ETradeOrderService(OrderService):
 
     @staticmethod
     def _parse_order_list_response(response) -> list[Order]:
+        print(response)
         pass

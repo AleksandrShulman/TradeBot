@@ -1,6 +1,5 @@
 from abc import ABC
 
-from common.api.orders.etrade.etrade_order_service import ETradeOrderService
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_request import OrderListRequest

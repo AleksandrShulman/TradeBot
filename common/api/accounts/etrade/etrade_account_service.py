@@ -1,4 +1,5 @@
 from common.account.account import Account
+from common.account.etrade.ETradeAccount import ETradeAccount
 from common.api.accounts.account_list_response import AccountListResponse
 from common.api.accounts.account_service import AccountService
 from common.api.accounts.get_account_info_request import GetAccountInfoRequest
@@ -43,9 +44,9 @@ class ETradeAccountService(AccountService):
             message = data['error']['message']
             raise Exception(f"Error from E*Trade: {code}: {message}")
         account_list_response = data["AccountListResponse"]
-        accounts: list[Account] = account_list_response["Accounts"]
+        accounts: list = account_list_response["Accounts"]
 
-        return_accounts = map(lambda account: Account(account["accountId"],
+        return_accounts = map(lambda account: ETradeAccount(account["accountId"], account["accountIdKey"],
                                                     account["accountName"], account["accountDesc"]), accounts["Account"])
 
         return AccountListResponse(list(filter(f, return_accounts)))

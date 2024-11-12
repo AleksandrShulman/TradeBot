@@ -1,5 +1,5 @@
-from common.account.account import Order
 from common.api.response import Response
+from common.order.order import Order
 
 
 class GetOrderResponse(Response):

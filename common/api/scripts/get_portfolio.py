@@ -19,7 +19,7 @@ An example is provided in `integration_test_properties.example.ini`.
 """
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'integration_test_properties.ini')
-ACCOUNT_ID_KEY = 'ACCOUNT_ID'
+ACCOUNT_ID_KEY = 'ACCOUNT_ID_KEY'
 
 config = configparser.ConfigParser()
 
@@ -31,8 +31,8 @@ if __name__ == "__main__":
 
     portfolio_service: ETradePortfolioService = ETradePortfolioService(connector)
 
-    account_key = config['ETRADE'][ACCOUNT_ID_KEY]
-    portfolio_request: GetPortfolioRequest = GetPortfolioRequest(account_key)
+    account_id_key = config['ETRADE'][ACCOUNT_ID_KEY]
+    portfolio_request: GetPortfolioRequest = GetPortfolioRequest(account_id_key)
     get_portfolio_response: GetPortfolioResponse = portfolio_service.get_portfolio_info(portfolio_request)
 
     portfolio = get_portfolio_response.portfolio

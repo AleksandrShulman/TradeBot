@@ -13,11 +13,11 @@ from dateutil.parser import parse
 
 class Option(Tradable):
     def __init__(self, equity: Equity, type: OptionType,
-                 strike: Amount, expiry: datetime, style: OptionStyle):
+                 strike: Amount, expiry: datetime.date, style: OptionStyle):
         self.equity: Equity = equity
         self.type: OptionType = type
         self.strike: Amount = strike
-        self.expiry: datetime = expiry
+        self.expiry: datetime.date = expiry
         self.style: OptionStyle = style
 
         for var in vars(self):
