@@ -92,7 +92,7 @@ class Amount:
     def __str__(self):
         return f"{self.whole}.{self.part}"
 
-    def __lt__(self, other):
+    def __le__(self, other):
         nominal: int = self.whole * 100 + self.part
         nominal_other: int = other.whole * 100 + other.part
         if self.negative:
