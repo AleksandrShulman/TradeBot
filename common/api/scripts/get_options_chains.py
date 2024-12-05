@@ -1,10 +1,14 @@
 import configparser
+import datetime
 import os
 
 from common.api.portfolio.GetPortfolioRequest import GetPortfolioRequest
 from common.api.portfolio.GetPortfolioResponse import GetPortfolioResponse
 from common.api.portfolio.etrade.etrade_portfolio_service import ETradePortfolioService
 from common.exchange.etrade.etrade_connector import ETradeConnector
+from common.finance.equity import Equity
+from quotes.api.get_options_chain_request import GetOptionsChainRequest
+from quotes.api.get_options_chain_response import GetOptionsChainResponse
 from quotes.etrade.etrade_quote_service import ETradeQuoteService
 from quotes.quote_service import QuoteService
 
@@ -26,12 +30,18 @@ if __name__ == "__main__":
     connector: ETradeConnector = ETradeConnector()
     q: QuoteService = ETradeQuoteService(connector)
 
-    portfolio_service: ETradePortfolioService = ETradePortfolioService(connector)
-
     account_id_key = config['ETRADE'][ACCOUNT_ID_KEY]
-    portfolio_request: GetPortfolioRequest = GetPortfolioRequest(account_id_key)
-    get_portfolio_response: GetPortfolioResponse = portfolio_service.get_portfolio_info(portfolio_request)
+    ticker = "SPY"
+    equity_name = "SPDR S&P 500 ETF TRUST"
 
-    portfolio = get_portfolio_response.portfolio
+    equity: Equity = Equity(ticker, equity_name)
 
-    print(portfolio)
+    expiry = datetime.datetime(2025, 3, 21).date()
+
+    options_chain_request_for_date: GetOptionsChainRequest = GetOptionsChainRequest(equity, expiry)
+
+    get_options_chain_response: GetOptionsChainResponse = q.get_options_chain(options_chain_request_for_date)
+
+    options_chain = get_options_chain_response.options_chain
+
+    print(options_chain)

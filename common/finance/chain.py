@@ -63,9 +63,9 @@ class Chain:
             put_price = str(self.expiry_strike_chain_put[expiry][strike]) if strike in self.expiry_strike_chain_put[expiry] else "___"
             call_price = str(self.expiry_strike_chain_call[expiry][strike]) if strike in self.expiry_strike_chain_call[expiry] else "___"
 
-            strike_to_line_map.append(f"${put_price}\t${strike}\t{call_price}")
+            strike_to_line_map.append(f"{put_price}\t${strike}\t\t{call_price}")
 
-        return f'{expiry}:\n' + f"\nMark\t|\tBid \t|\tAsk \t|\tLast\tStrike\tMark\t|\tBid \t|\tAsk \t|\tLast\n" + '\n'.join(strike_to_line_map) + '\n'
+        return f'{expiry}:\n' + f"\nMark\t|\tBid \t|\tAsk \t|\tStrike\t|\tMark\t|\tBid \t|\tAsk \t\n" + '\n'.join(strike_to_line_map) + '\n'
 
     def _update_call_chain(self, priced_option: PricedOption):
         option = priced_option.option
@@ -81,7 +81,7 @@ class Chain:
 
         # update option.expiry_strike
         if option.expiry in self.expiry_strike_chain_call:
-            if self.expiry_strike_chain_call[option.expiry]:
+            if option.strike in self.expiry_strike_chain_call[option.expiry]:
                 logger.warning("Overwriting value ")
             self.expiry_strike_chain_call[option.expiry][option.strike] = price
         else:
@@ -101,7 +101,7 @@ class Chain:
 
         # update option.expiry_strike
         if option.expiry in self.expiry_strike_chain_put:
-            if self.expiry_strike_chain_put[option.expiry]:
+            if option.strike in self.expiry_strike_chain_put[option.expiry]:
                 logger.warning("Overwriting value ")
             self.expiry_strike_chain_put[option.expiry][option.strike] = price
         else:

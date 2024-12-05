@@ -48,7 +48,7 @@ class CalendarSpreadConstructor:
         #expiries = self.get_expiry_dates()
         expiries = [datetime.date(2024, 12,9), datetime.date(2024, 12,10), datetime.date(2024, 12,11)]
         for expiry in expiries:
-            expiry_request = GetOptionsChainRequest(self.equity.ticker, expiry)
+            expiry_request = GetOptionsChainRequest(self.equity, expiry)
             options_chain: Chain = self.qs.get_options_chain(expiry_request)
             print(options_chain)
             pass

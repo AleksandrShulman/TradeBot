@@ -2,9 +2,6 @@ import configparser
 import os
 from datetime import datetime
 
-from common.api.accounts.account_service import AccountService
-from common.api.accounts.etrade.etrade_account_service import ETradeAccountService
-from common.api.accounts.get_account_info_request import GetAccountInfoRequest
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
 from common.api.orders.order_list_request import OrderListRequest
 from common.api.orders.order_service import OrderService

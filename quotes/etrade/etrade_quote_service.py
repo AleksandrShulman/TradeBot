@@ -1,12 +1,18 @@
+import json
 import logging
 from datetime import datetime
 
+from click import option
+
 from common.exchange.etrade.etrade_connector import ETradeConnector
+from common.finance.amount import Amount
+from common.finance.chain import Chain
 from common.finance.equity import Equity
 from common.finance.option import Option
+from common.finance.option_type import OptionType
 from common.finance.price import Price
+from common.finance.priced_option import PricedOption
 from common.finance.tradable import Tradable
-from common.test.util.test_object_util import expiry
 from quotes.api.get_options_chain_request import GetOptionsChainRequest
 from quotes.api.get_options_chain_response import GetOptionsChainResponse
 from quotes.api.get_option_expire_dates_request import GetOptionExpireDatesRequest
@@ -65,34 +71,30 @@ class ETradeQuoteService(QuoteService):
         return tradable_response
 
     def get_equity_quote(self, symbol: str):
-
         pass
 
     def get_options_chain(self, get_options_chain_request: GetOptionsChainRequest) -> GetOptionsChainResponse:
         connector: ETradeConnector = self.connector
         session, base_url = connector.load_connection()
 
-        options: dict[str, str] = {}
+        params: dict[str, str] = dict[str, str]()
+        equity: Equity = get_options_chain_request.equity
         if get_options_chain_request.expiry:
             as_datetime: datetime.date = get_options_chain_request.expiry
             year = as_datetime.year
             month = as_datetime.month
             day = as_datetime.day
 
-            options["expiryYear"] = year
-            options["expiryMonth"] = month
-            options["expiryDay"] = day
+            params["expiryYear"] = year
+            params["expiryMonth"] = month
+            params["expiryDay"] = day
+            params["symbol"] = equity.ticker
 
-        path = f"/v1/market/optionchains?symbol={get_options_chain_request.symbol}"
-        #for k,v in options.items():
-        #    path = f"{path}&{k}={v}"
+        path = f"/v1/market/optionchains.json"
 
         url = base_url + path
-        response = session.get(url)
-        print(f"Getting options chain for {get_options_chain_request.symbol}")
-        print(f"Request headers: {response.request.headers}")
-        print(f"Request URL: {response.url}")
-        options_chain = ETradeQuoteService._parse_options_chain(response)
+        response = session.get(url, params=params)
+        options_chain = ETradeQuoteService._parse_options_chain(response, equity)
         return GetOptionsChainResponse(options_chain)
 
     def get_option_expire_dates(self, get_options_expire_dates_request: GetOptionExpireDatesRequest)-> GetOptionExpireDatesResponse:
@@ -113,9 +115,36 @@ class ETradeQuoteService(QuoteService):
 
 
     @staticmethod
-    def _parse_options_chain(input):
-        data: dict = input.json()
-        print(data)
+    def _parse_options_chain(input, equity:Equity):
+        data: dict = json.loads(input.text)
+
+        option_chain = Chain(equity)
+        option_chain_response = data['OptionChainResponse']
+
+        selected = option_chain_response["SelectedED"]
+        expiry_day = selected["day"]
+        expiry_month = selected["month"]
+        expiry_year = selected["year"]
+
+        expiry_date = datetime(expiry_year, expiry_month, expiry_day).date()
+        option_pairs = option_chain_response["OptionPair"]
+        for option_pair in option_pairs:
+            # Note that exercise style is not available in the response, per the documentation. We'll need a good way to look it up.
+            if "Call" in option_pair:
+                call_details=option_pair["Call"]
+                call = Option(equity, OptionType.CALL, Amount.from_string(str(call_details["strikePrice"])), expiry_date)
+                price = Price(call_details["bid"], call_details["ask"], call_details["lastPrice"])
+                po: PricedOption = PricedOption(call, price)
+                option_chain.add(po)
+
+            if "Put" in option_pair:
+                put_details=option_pair["Put"]
+                put = Option(equity, OptionType.PUT, Amount.from_string(str(put_details["strikePrice"])), expiry_date)
+                price = Price(put_details["bid"], put_details["ask"], put_details["lastPrice"])
+                po: PricedOption = PricedOption(put, price)
+                option_chain.add(po)
+
+        return option_chain
 
 
     @staticmethod

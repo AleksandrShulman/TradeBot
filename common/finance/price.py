@@ -12,7 +12,7 @@ class Price:
 
     def __str__(self):
         self.mark = round(mean([self.bid, self.ask]), 2)
-        return f"{self.mark:.2f}\t|\t{self.bid:.2f}\t|\t{self.ask:.2f}\t|\t{self.last:.2f}"
+        return f"{self.mark:.2f}\t|\t{self.bid:.2f}\t|\t{self.ask:.2f}\t"
 
     def copy_of(self):
         return Price(self.bid, self.ask, self.last)

@@ -92,6 +92,16 @@ class Amount:
     def __str__(self):
         return f"{self.whole}.{self.part}"
 
+    def __lt__(self, other):
+        nominal: int = self.whole * 100 + self.part
+        nominal_other: int = other.whole * 100 + other.part
+        if self.negative:
+            nominal = -1 * nominal
+        if other.negative:
+            nominal_other = -1 * nominal
+
+        return nominal < nominal_other
+
     def __eq__(self, other):
         if other.currency != self.currency:
             return False
