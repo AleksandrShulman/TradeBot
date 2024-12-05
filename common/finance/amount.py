@@ -20,7 +20,7 @@ class Amount:
         if not input_str:
             raise Exception("could not parse input")
 
-        if '.' in input_str:
+        if "." in input_str:
             (whole, part) = input_str.split('.')
         else:
             input_str = input_str.strip("$")
@@ -61,17 +61,24 @@ class Amount:
 
         return Amount(new_whole, new_part, self.currency, total < 0)
 
-    def __mul__(self, other):
+    # This is a scalar operation, returning an Amount, as it makes no sense to multiply two amounts together (units would be Currency^2)
+    def __mul__(self, other: float):
+        total: float = float(abs(self.in_smallest_denomination())) * abs(other)
+        negative = self.negative ^ (other < 0)
+
+
+        new_whole: int = math.floor(total / 100)
+        new_part: int = round(total % 100)
+
+        return Amount(new_whole, new_part, self.currency, negative)
+
+    # This can be a scalar operation (units are Currency). It can also be a simple float b/c we'd get a ratio if we divided two values.
+    def __truediv__(self, other)->float:
         if other.currency != self.currency:
             raise Exception("implicit currency conversion not supported")
 
-        total = abs(self.in_smallest_denomination()) * abs(other.in_smallest_denomination())
-        negative = self.negative ^ other.negative
-
-        new_whole: int = math.floor(total / 10000)
-        new_part: int = math.floor((total % 10000) / 100)
-
-        return Amount(new_whole, new_part, self.currency, negative)
+        total: float = float(float(self.in_smallest_denomination()) / float(other.in_smallest_denomination()))
+        return round(total, 2)
 
     def in_smallest_denomination(self) -> int:
         nominal = self.whole * 100 + self.part

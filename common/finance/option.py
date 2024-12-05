@@ -3,7 +3,7 @@ from datetime import datetime
 
 from common.finance.amount import Amount
 from common.finance.equity import Equity
-from common.finance.option_style import OptionStyle
+from common.finance.exercise_style import ExerciseStyle
 from common.finance.option_type import OptionType
 from common.finance.tradable import Tradable
 from common.utils.local_ticker_lookup import LocalTickerLookup
@@ -13,12 +13,12 @@ from dateutil.parser import parse
 
 class Option(Tradable):
     def __init__(self, equity: Equity, type: OptionType,
-                 strike: Amount, expiry: datetime.date, style: OptionStyle):
+                 strike: Amount, expiry: datetime.date, style: ExerciseStyle):
         self.equity: Equity = equity
         self.type: OptionType = type
         self.strike: Amount = strike
         self.expiry: datetime.date = expiry
-        self.style: OptionStyle = style
+        self.style: ExerciseStyle = style
 
         for var in vars(self):
             if self.__getattribute__(var) is None:
@@ -59,4 +59,4 @@ class Option(Tradable):
 
         company_name = LocalTickerLookup.lookup(ticker)
 
-        return Option(Equity(ticker, company_name), type, strike, expiry, OptionStyle.from_ticker(ticker))
+        return Option(Equity(ticker, company_name), type, strike, expiry, ExerciseStyle.from_ticker(ticker))

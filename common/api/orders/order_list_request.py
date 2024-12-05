@@ -4,12 +4,12 @@ from common.api.request import Request
 from common.order.order_status import OrderStatus
 
 
-DEFAULT_ORDER_LIST_COUNT = 200
+DEFAULT_ORDER_LIST_COUNT = 50
 
 
 class OrderListRequest(Request):
     def __init__(self, account_id: str, status: OrderStatus, from_date: datetime.date,
-                    to_date: datetime.date, max_count):
+                    to_date: datetime.date, max_count=DEFAULT_ORDER_LIST_COUNT):
         self.account_id = account_id
         self.status = status
         self.from_date = from_date

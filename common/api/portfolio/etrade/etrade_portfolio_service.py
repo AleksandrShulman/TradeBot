@@ -8,7 +8,7 @@ from common.exchange.connector import Connector
 from common.finance.amount import Amount
 from common.finance.equity import Equity
 from common.finance.option import Option
-from common.finance.option_style import OptionStyle
+from common.finance.exercise_style import ExerciseStyle
 from common.finance.option_type import OptionType
 from common.finance.tradable import Tradable
 from common.portfolio.portfolio import Portfolio
@@ -34,19 +34,22 @@ class ETradePortfolioService(PortfolioService):
         self.session, self.base_url = self.connector.load_connection()
 
     def get_portfolio_info(self, get_portfolio_request: GetPortfolioRequest, exchange_specific_options: dict[str, str] = DEFAULT_PORTFOLIO_OPTIONS) -> GetPortfolioResponse:
-        account_id = get_portfolio_request.account_id
+        account_id_key = get_portfolio_request.account_id
 
-        path = f"/v1/accounts/{account_id}/portfolio.json"
+        path = f"/v1/accounts/{account_id_key}/portfolio.json"
 
+        params: dict[str, str] = dict()
+        params["count"] = str(DEFAULT_NUM_POSITIONS)
         if exchange_specific_options:
-            options_str = ",".join(f"{k}={v}" for k,v in exchange_specific_options.items())
-        else:
-            options_str = f"count={DEFAULT_NUM_POSITIONS}"
-
-        path += f"?{options_str}"
+            for k,v in exchange_specific_options.items():
+                params[k]=v
 
         url = self.base_url + path
-        response = self.session.get(url)
+        # approach 1
+        response = self.session.get(url, params=params)
+        print(response.request.headers)
+        print(response.url)
+
         portfolio_list_response = ETradePortfolioService._parse_portfolio_response(response)
         return portfolio_list_response
 
@@ -58,13 +61,13 @@ class ETradePortfolioService(PortfolioService):
             message = error['message']
             status_code = input.status_code
             raise Exception(f"Status {status_code}, {message}")
-        data: dict = json.load(input)
+        data: dict = json.loads(input.text)
         portfolio_response = data["PortfolioResponse"]
-        account_portfolios = portfolio_response["accountPortfolio"]
+        account_portfolios = portfolio_response["AccountPortfolio"]
 
         return_portfolio = Portfolio()
         for account_portfolio in account_portfolios:
-            positions = account_portfolio["position"]
+            positions = account_portfolio["Position"]
 
             for position in positions:
                 tradable = ETradePortfolioService._get_tradable_from_position(position)
@@ -75,9 +78,9 @@ class ETradePortfolioService(PortfolioService):
 
     @staticmethod
     def _get_tradable_from_position(position) -> Tradable:
-        product = position["product"]
+        product = position["Product"]
         symbol = product["symbol"]
-        symbol_desc = position["symbolDesc"]
+        symbol_desc = position["Complete"]["symbolDescription"]
 
         e = Equity(symbol, symbol_desc)
 
@@ -85,12 +88,12 @@ class ETradePortfolioService(PortfolioService):
             return e
         elif product["securityType"] == "OPTN":
             option_type: OptionType = OptionType.from_str(product["callPut"])
-            strike_price: Amount = Amount.from_string(product["strikePrice"])
-            option_style: OptionStyle = OptionStyle.from_expiry_type(product["expiryType"])
+            strike_price: Amount = Amount.from_string(str(product["strikePrice"]))
+            exercise_style: ExerciseStyle = ExerciseStyle.AMERICAN if "expiryType" not in product else ExerciseStyle.from_expiry_type(product["expiryType"])
             expiry_year: int = product["expiryYear"]
             expiry_day: int = product["expiryDay"]
             expiry_month: int = product["expiryMonth"]
-            return Option(e, option_type, strike_price, datetime.datetime(expiry_year, expiry_month, expiry_day).date(), option_style)
+            return Option(e, option_type, strike_price, datetime.datetime(expiry_year, expiry_month, expiry_day).date(), exercise_style)
         else:
             raise Exception(f"Style {product['securityType']} not supported yet")
 

@@ -6,7 +6,7 @@ from common.finance.amount import Amount
 from common.finance.currency import Currency
 from common.finance.equity import Equity
 from common.finance.option import Option
-from common.finance.option_style import OptionStyle
+from common.finance.exercise_style import ExerciseStyle
 from common.finance.option_type import OptionType
 from common.order.expiry.good_for_day import GoodForDay
 from common.order.expiry.good_for_sixty_days import GoodForSixtyDays
@@ -21,7 +21,7 @@ expiry = GoodForSixtyDays().expiry_date
 expiry2 = GoodForDay().expiry_date
 
 price = Amount(0, 87, Currency.US_DOLLARS)
-style = OptionStyle.AMERICAN
+style = ExerciseStyle.AMERICAN
 
 
 def test_option_construction():
@@ -67,7 +67,7 @@ def test_option_parsing_european():
     assert o.type == OptionType.CALL
     assert o.strike == Amount(19, 0)
     assert datetime(2024, 10, 16) == o.expiry
-    assert o.style == OptionStyle.EUROPEAN
+    assert o.style == ExerciseStyle.EUROPEAN
 
 
 def test_option_parsing_american():
@@ -77,5 +77,5 @@ def test_option_parsing_american():
     assert o.type == OptionType.CALL
     assert o.strike == Amount(7, 50)
     assert datetime(2024, 11, 8) == o.expiry
-    assert o.style == OptionStyle.AMERICAN
+    assert o.style == ExerciseStyle.AMERICAN
 

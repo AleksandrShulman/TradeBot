@@ -19,7 +19,7 @@ An example is provided in `integration_test_properties.example.ini`.
 """
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'integration_test_properties.ini')
-ACCOUNT_ID_KEY = 'ACCOUNT_ID'
+ACCOUNT_ID_KEY = 'ACCOUNT_ID_KEY'
 
 JAN_1_2024 = datetime(2024,1,1).date()
 TODAY = datetime.now().date()
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     o: OrderService = ETradeOrderService(connector)
     account_key = config['ETRADE'][ACCOUNT_ID_KEY]
 
-    list_order_request = OrderListRequest(account_key, OrderStatus.OPEN, JAN_1_2024, TODAY, 1000 )
+    list_order_request = OrderListRequest(account_key, OrderStatus.OPEN, JAN_1_2024, TODAY, 50 )
     orders = o.list_orders(list_order_request, None)
 
     print(orders)

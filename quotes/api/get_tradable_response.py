@@ -5,7 +5,7 @@ from common.finance.tradable import Tradable
 from common.api.response import Response
 
 
-class TradableResponse(Response):
+class GetTradableResponse(Response):
     def __init__(self, tradable: Tradable, response_time: datetime, current_price: Price, volume: int):
         self.tradable: Tradable = tradable
         self.response_time = response_time

@@ -16,19 +16,22 @@ class ETradeOrderService(OrderService):
 
     def list_orders(self, list_orders_request: OrderListRequest, exchange_specific_opts: dict[str, str]) -> OrderListResponse:
         #account_id = list_orders_request.account_id
-        account_id = 472420319
+        account_id = list_orders_request.account_id
         path = f"/v1/accounts/{account_id}/orders.json"
         count = list_orders_request.count
 
-        options_str = f"?count={count}"
-        if exchange_specific_opts:
-            options_str_addendum = ",".join(f"{k}={v}" for k, v in list_orders_request.items())
-            options_str += options_str_addendum
+        params = dict()
+        params["count"] = count
+        params["fromDate"] = list_orders_request.from_date.strftime("%m%d%Y")
+        params["toDate"] = list_orders_request.to_date.strftime("%m%d%Y")
 
-        path += options_str
+        if exchange_specific_opts:
+            for k, v in list_orders_request.items():
+                params[k] = v
 
         url = self.base_url + path
-        response = self.session.get(url)
+        print(url)
+        response = self.session.get(url, params=params)
 
         order_list_response = ETradeOrderService._parse_order_list_response(response)
         return order_list_response

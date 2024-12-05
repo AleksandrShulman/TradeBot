@@ -6,7 +6,7 @@ from common.finance.currency import Currency
 from common.finance.equity import Equity
 from common.finance.option import Option
 from common.finance.priced_option import PricedOption
-from common.finance.option_style import OptionStyle
+from common.finance.exercise_style import ExerciseStyle
 from common.finance.option_type import OptionType
 from common.finance.price import Price
 
@@ -86,8 +86,8 @@ def _get_option_prices_at_strikes(equity, strikes: list[float], strike_delta: Am
 
         put_option_price = _generate_full_option_price_around_central_value(put_value, spread_amt)
         call_option_price = _generate_full_option_price_around_central_value(call_value, spread_amt)
-        put_option = Option(equity, OptionType.PUT, strike, expiry, OptionStyle.AMERICAN)
-        call_option = Option(equity, OptionType.CALL, strike, expiry, OptionStyle.AMERICAN)
+        put_option = Option(equity, OptionType.PUT, strike, expiry, ExerciseStyle.AMERICAN)
+        call_option = Option(equity, OptionType.CALL, strike, expiry, ExerciseStyle.AMERICAN)
         return_list[strike] = (PricedOption(put_option, put_option_price),
                                PricedOption(call_option, call_option_price))
 

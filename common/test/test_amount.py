@@ -42,11 +42,20 @@ def test_subtract_two_amounts_negative_result():
     assert a3.negative
 
 
+
+def test_divide_two_amounts():
+    a1 = Amount(10, 15, Currency.US_DOLLARS)
+    a2 = Amount(6, 3, Currency.US_DOLLARS)
+
+    a3 = a1 / a2
+
+    assert a3 == 1.68
+
 def test_multiply_two_amounts():
     a1 = Amount(10, 15, Currency.US_DOLLARS)
-    a2 = Amount(2, 95, Currency.US_DOLLARS)
+    a2 = 2.95
 
-    a3 = a2 * a1
+    a3 = a1 * a2
 
     assert a3.whole == 29
     assert a3.part == 94
@@ -54,15 +63,14 @@ def test_multiply_two_amounts():
     print(a3.negative)
     assert False is a3.negative
 
-
 def test_multiply_two_amounts_is_negative():
     a1 = Amount(10, 15, Currency.US_DOLLARS)
-    a2 = Amount(2, 95, Currency.US_DOLLARS, negative=True)
+    negative_scalar = -2.5
 
-    a3 = a2 * a1
+    a3 = a1 * negative_scalar
 
-    assert a3.whole == 29
-    assert a3.part == 94
+    assert a3.whole == 25
+    assert a3.part == 38
     assert a3.currency == Currency.US_DOLLARS
     print(a3.negative)
     assert True is a3.negative

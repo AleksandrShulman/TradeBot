@@ -3,8 +3,11 @@ from datetime import datetime
 
 from common.exchange.connector import Connector
 from common.finance.option import Option
-from quotes.api.tradable_request import TradableRequest
-from quotes.api.tradable_response import TradableResponse
+from quotes.api.get_option_expire_dates_request import GetOptionExpireDatesRequest
+from quotes.api.get_options_chain_request import GetOptionsChainRequest
+from quotes.api.get_options_chain_response import GetOptionsChainResponse
+from quotes.api.get_tradable_request import GetTradableRequest
+from quotes.api.get_tradable_response import GetTradableResponse
 
 
 class QuoteService(ABC):
@@ -12,7 +15,7 @@ class QuoteService(ABC):
     def __init__(self, connector: Connector):
         self.connector = connector
 
-    def get_tradable_quote(self, reqest: TradableRequest) -> TradableResponse:
+    def get_tradable_quote(self, reqest: GetTradableRequest) -> GetTradableResponse:
         pass
 
 
@@ -21,6 +24,9 @@ class QuoteService(ABC):
 
 
         # parse response
+        pass
+
+    def get_options_chain(self, get_options_chain_request: GetOptionsChainRequest) -> GetOptionsChainResponse:
         pass
 
     def get_options_chain_for_expiry(self, symbol: str, expiry: datetime):

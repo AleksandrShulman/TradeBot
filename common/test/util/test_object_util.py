@@ -4,7 +4,7 @@ from common.finance.amount import Amount
 from common.finance.currency import Currency
 from common.finance.equity import Equity
 from common.finance.option import Option
-from common.finance.option_style import OptionStyle
+from common.finance.exercise_style import ExerciseStyle
 from common.finance.option_type import OptionType
 
 
@@ -19,7 +19,7 @@ expiry = datetime.datetime(2025, 3, 21).date()
 expiry2 = datetime.datetime.today().date()
 
 price = Amount(0, 87, Currency.US_DOLLARS)
-style = OptionStyle.AMERICAN
+style = ExerciseStyle.AMERICAN
 
 
 def get_sample_expiry():

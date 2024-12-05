@@ -2,7 +2,7 @@ from common.finance.tradable import Tradable
 from common.api.request import Request
 
 
-class TradableRequest(Request):
+class GetTradableRequest(Request):
     def __init__(self, tradable: Tradable):
         self.tradable = tradable
 

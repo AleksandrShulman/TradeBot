@@ -6,8 +6,13 @@ from common.finance.equity import Equity
 from common.finance.option import Option
 from common.finance.price import Price
 from common.finance.tradable import Tradable
-from quotes.api.tradable_request import TradableRequest
-from quotes.api.tradable_response import TradableResponse
+from common.test.util.test_object_util import expiry
+from quotes.api.get_options_chain_request import GetOptionsChainRequest
+from quotes.api.get_options_chain_response import GetOptionsChainResponse
+from quotes.api.get_option_expire_dates_request import GetOptionExpireDatesRequest
+from quotes.api.get_option_expire_dates_response import GetOptionExpireDatesResponse
+from quotes.api.get_tradable_request import GetTradableRequest
+from quotes.api.get_tradable_response import GetTradableResponse
 from quotes.quote_service import QuoteService
 
 
@@ -29,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 class ETradeQuoteService(QuoteService):
 
-    def get_tradable_quote(self, tradable_request: TradableRequest) -> TradableResponse:
+    def get_tradable_quote(self, tradable_request: GetTradableRequest) -> GetTradableResponse:
 
         connector: ETradeConnector = self.connector
         session, base_url = connector.load_connection()
@@ -52,6 +57,9 @@ class ETradeQuoteService(QuoteService):
         path = f"/v1/market/quote/{symbols}.json"
         url = base_url + path
         response = session.get(url)
+        print(f"Getting info for {symbols}")
+        print(f"Request headers: {response.request.headers}")
+        print(f"Request URL: {response.url}")
         tradable_response = ETradeQuoteService._parse_market_response(tradable, response)
 
         return tradable_response
@@ -60,11 +68,55 @@ class ETradeQuoteService(QuoteService):
 
         pass
 
-    def get_options_chain_for_expiry(self, symbol: str, expiry: datetime):
-        pass
+    def get_options_chain(self, get_options_chain_request: GetOptionsChainRequest) -> GetOptionsChainResponse:
+        connector: ETradeConnector = self.connector
+        session, base_url = connector.load_connection()
+
+        options: dict[str, str] = {}
+        if get_options_chain_request.expiry:
+            as_datetime: datetime.date = get_options_chain_request.expiry
+            year = as_datetime.year
+            month = as_datetime.month
+            day = as_datetime.day
+
+            options["expiryYear"] = year
+            options["expiryMonth"] = month
+            options["expiryDay"] = day
+
+        path = f"/v1/market/optionchains?symbol={get_options_chain_request.symbol}"
+        #for k,v in options.items():
+        #    path = f"{path}&{k}={v}"
+
+        url = base_url + path
+        response = session.get(url)
+        print(f"Getting options chain for {get_options_chain_request.symbol}")
+        print(f"Request headers: {response.request.headers}")
+        print(f"Request URL: {response.url}")
+        options_chain = ETradeQuoteService._parse_options_chain(response)
+        return GetOptionsChainResponse(options_chain)
+
+    def get_option_expire_dates(self, get_options_expire_dates_request: GetOptionExpireDatesRequest)-> GetOptionExpireDatesResponse:
+        connector: ETradeConnector = self.connector
+        session, base_url = connector.load_connection()
+
+        path = f"/v1/market/optionexpiredate.json?symbol={get_options_expire_dates_request.symbol}"
+        url = base_url + path
+        response = session.get(url)
+        print(f"Getting options expiries for {get_options_expire_dates_request.symbol}")
+        print(f"Request headers: {response.request.headers}")
+        print(f"Request URL: {response.url}")
+        dates: list[datetime] = ETradeQuoteService._parse_option_expire_dates(response)
+        return GetOptionExpireDatesResponse(dates)
 
     def get_option_details(self, option: Option):
         pass
+
+
+    @staticmethod
+    def _parse_options_chain(input):
+        data: dict = input.json()
+        print(data)
+
 
     @staticmethod
     def _parse_market_response(tradable: Tradable, input):
@@ -86,7 +138,7 @@ class ETradeQuoteService(QuoteService):
                     if quote is not None and "All" in quote and "totalVolume" in quote["All"]:
                         print("Volume: " + str('{:,}'.format(quote["All"]["totalVolume"])))
                         volume = quote["All"]["totalVolume"]
-                return TradableResponse(tradable, response_time, Price(bid, ask), volume)
+                return GetTradableResponse(tradable, response_time, Price(bid, ask), volume)
             else:
                 # Handle errors
                 if data is not None and 'QuoteResponse' in data and 'Messages' in data["QuoteResponse"] \
@@ -99,3 +151,9 @@ class ETradeQuoteService(QuoteService):
         else:
             logger.debug("Response Body: %s", input)
             print("Error: Quote API service error")
+
+    @staticmethod
+    def _parse_option_expire_dates(response):
+        data: dict = response.json()
+        print(data)
+
