@@ -2,6 +2,7 @@ import logging
 
 from common.finance.amount import Amount
 from common.finance.equity import Equity
+from common.finance.price import Price
 from common.finance.priced_option import PricedOption
 from common.finance.option_type import OptionType
 import datetime
@@ -14,11 +15,12 @@ class Chain:
     def __init__(self, equity: Equity):
         self.equity: Equity = equity
         # keyed on strike then date
-        self.strike_expiry_chain_call: dict[datetime, dict[Amount, PricedOption]] = dict()
-        self.expiry_strike_chain_call: dict[Amount, dict[datetime, PricedOption]] = dict()
-        
-        self.strike_expiry_chain_put: dict[datetime, dict[Amount, PricedOption]] = dict()
-        self.expiry_strike_chain_put: dict[Amount, dict[datetime, PricedOption]] = dict()
+        self.strike_expiry_chain_call: dict[datetime, dict[Amount, Price]] = dict()
+        self.expiry_strike_chain_call: dict[Amount, dict[datetime, Price]] = dict()
+
+        # keyed on date then strike
+        self.strike_expiry_chain_put: dict[datetime, dict[Amount, Price]] = dict()
+        self.expiry_strike_chain_put: dict[Amount, dict[datetime, Price]] = dict()
 
     def add(self, priced_option: PricedOption):
         option = priced_option.option
