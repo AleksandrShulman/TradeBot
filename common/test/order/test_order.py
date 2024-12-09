@@ -29,10 +29,11 @@ def test_build_single_line_order():
     call_option: Tradable = Option(e, OptionType.CALL, strike, datetime.datetime(2024, 11, 5).date(), ExerciseStyle.AMERICAN)
     order_line = OrderLine(call_option,  Action.SELL_OPEN, 1)
     order_price: OrderPrice = OrderPrice(OrderPriceType.NET_CREDIT, Amount(0, 14, Currency.US_DOLLARS))
+    order_placed_time: datetime.datetime = datetime.datetime.now()
     order_status: OrderStatus = OrderStatus.OPEN
     market_session: MarketSession = MarketSession.BOTH
 
-    single_order = Order(account_id, order_id,order_expiry, [order_line], order_price, order_status, market_session)
+    single_order = Order(account_id, order_id,order_expiry, [order_line], order_price, order_placed_time, order_status, market_session)
 
     assert single_order is not None
 
@@ -52,9 +53,10 @@ def test_build_dual_line_order():
     order_line2 = OrderLine(call_option2, Action.BUY_OPEN, 1)
 
     order_price: OrderPrice = OrderPrice(OrderPriceType.NET_CREDIT, Amount(0, 14, Currency.US_DOLLARS))
+    order_placed_time: datetime.datetime = datetime.datetime.now()
     order_status: OrderStatus = OrderStatus.OPEN
     market_session: MarketSession = MarketSession.BOTH
 
-    dual_order = Order(account_id, order_id, order_expiry, [order_line, order_line2], order_price, order_status, market_session)
+    dual_order = Order(account_id, order_id, order_expiry, [order_line, order_line2], order_price, order_placed_time, order_status, market_session)
 
     assert dual_order is not None

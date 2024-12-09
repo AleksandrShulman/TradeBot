@@ -44,8 +44,11 @@ class ETradeOrderService(OrderService):
         params["fromDate"] = list_orders_request.from_date.strftime("%m%d%Y")
         params["toDate"] = list_orders_request.to_date.strftime("%m%d%Y")
 
+        if list_orders_request.status is not OrderStatus.ANY:
+            params["status"] = list_orders_request.status.name
+
         if exchange_specific_opts:
-            for k, v in list_orders_request.items():
+            for k, v in exchange_specific_opts.items():
                 params[k] = v
 
         url = self.base_url + path
@@ -62,6 +65,9 @@ class ETradeOrderService(OrderService):
 
     @staticmethod
     def _parse_order_list_response(response, account_id) -> list[Order]:
+        if response.status_code == '204':
+            return list[Order]()
+
         data = response.json()
         print(data)
 
@@ -112,8 +118,9 @@ class ETradeOrderService(OrderService):
 
 
             order_price: OrderPrice = OrderPrice(price_type, limit_price)
+            order_placed_time: datetime = datetime.fromtimestamp(order_detail["placedTime"]/1000)
 
-            o: Order = Order(order_id, account_id, status, expiry, order_lines, order_price, market_session, replaces_order_id)
+            o: Order = Order(order_id, account_id, status, expiry, order_lines, order_price, order_placed_time, market_session, replaces_order_id)
             if status == OrderStatus.EXECUTED:
                 execution_order_details: ExecutionOrderDetails = ExecutionOrderDetails(Amount.from_float(order_detail["orderValue"]), datetime.fromtimestamp(order_detail["executedTime"]/1000))
                 o: ExecutedOrder = ExecutedOrder(o, execution_order_details)

@@ -10,3 +10,4 @@ class OrderStatus(Enum):
     CANCEL_REQUESTED = 5,
     EXPIRED = 6,
     REJECTED = 7
+    ANY = 8
