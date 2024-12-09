@@ -27,12 +27,12 @@ def test_build_single_line_order():
     order_id: int = 123
     order_expiry: OrderExpiry = GoodForDay()
     call_option: Tradable = Option(e, OptionType.CALL, strike, datetime.datetime(2024, 11, 5).date(), ExerciseStyle.AMERICAN)
-    order_line = OrderLine(call_option, 1, Action.SELL_TO_OPEN)
-    order_price: OrderPrice = OrderPrice(OrderPriceType.LIMIT_CREDIT, Amount(0, 14, Currency.US_DOLLARS))
+    order_line = OrderLine(call_option,  Action.SELL_OPEN, 1)
+    order_price: OrderPrice = OrderPrice(OrderPriceType.NET_CREDIT, Amount(0, 14, Currency.US_DOLLARS))
     order_status: OrderStatus = OrderStatus.OPEN
     market_session: MarketSession = MarketSession.BOTH
 
-    single_order = Order(account_id,  order_id,order_expiry, [order_line], order_price, order_status, market_session)
+    single_order = Order(account_id, order_id,order_expiry, [order_line], order_price, order_status, market_session)
 
     assert single_order is not None
 
@@ -45,13 +45,13 @@ def test_build_dual_line_order():
     order_expiry: OrderExpiry = GoodForDay()
     call_option: Tradable = Option(e, OptionType.CALL, strike, datetime.datetime(2024, 11, 5).date(),
                                    ExerciseStyle.AMERICAN)
-    order_line = OrderLine(call_option, 2, Action.SELL_TO_OPEN)
+    order_line = OrderLine(call_option, Action.SELL_OPEN, 2)
 
     strike2: Amount = Amount(20, 0, Currency.US_DOLLARS)
     call_option2 = Option(e, OptionType.CALL, strike2, datetime.date(2024, 11, 5), ExerciseStyle.AMERICAN)
-    order_line2 = OrderLine(call_option2, 1, Action.BUY_TO_OPEN)
+    order_line2 = OrderLine(call_option2, Action.BUY_OPEN, 1)
 
-    order_price: OrderPrice = OrderPrice(OrderPriceType.LIMIT_CREDIT, Amount(0, 14, Currency.US_DOLLARS))
+    order_price: OrderPrice = OrderPrice(OrderPriceType.NET_CREDIT, Amount(0, 14, Currency.US_DOLLARS))
     order_status: OrderStatus = OrderStatus.OPEN
     market_session: MarketSession = MarketSession.BOTH
 

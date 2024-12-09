@@ -5,8 +5,8 @@ from common.finance.tradable import Tradable
 
 class Equity(Tradable):
     def __init__(self, ticker, company_name):
-        if not ticker or not company_name:
-            raise Exception(f"Inputs ({ticker}, {company_name}) not valid")
+        if not ticker:
+            raise Exception(f"Inputs ({ticker} not valid")
         self.ticker = ticker
         self.company_name = company_name
         self.price: Price = None

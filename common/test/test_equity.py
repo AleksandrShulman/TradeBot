@@ -11,8 +11,3 @@ def test_equity_string():
 def test_equity_empty_ticker():
     with pytest.raises(Exception, match='not valid'):
         Equity("", "General Electric")
-
-
-def test_equity_none_name():
-    with pytest.raises(Exception, match='not valid'):
-        Equity("GE", None)

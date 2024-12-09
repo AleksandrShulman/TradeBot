@@ -22,6 +22,7 @@ class Amount:
 
         if "." in input_str:
             (whole, part) = input_str.split('.')
+            part = part[:2]
         else:
             input_str = input_str.strip("$")
             whole = input_str
@@ -34,8 +35,11 @@ class Amount:
 
     @staticmethod
     def from_float(input_float: float, currency=Currency.US_DOLLARS):
-        if not input_float:
+        if input_float is None:
             raise Exception("could not parse input")
+
+        if input_float == 0.0 or input_float == 0:
+            return Amount(0,0, currency)
 
         return Amount.from_string(str(input_float), currency)
 

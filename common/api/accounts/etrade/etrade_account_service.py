@@ -2,6 +2,7 @@ from datetime import datetime
 
 from common.account.account import Account
 from common.account.account_balance import AccountBalance
+from common.account.brokerage_call import BrokerageCallType, BrokerageCall
 from common.account.computed_balance import ComputedBalance
 from common.account.etrade.ETradeAccount import ETradeAccount
 from common.account.option_level import OptionLevel
@@ -12,7 +13,7 @@ from common.api.accounts.get_account_balance_response import GetAccountBalanceRe
 from common.api.accounts.get_account_info_request import GetAccountInfoRequest
 from common.api.accounts.get_account_info_response import GetAccountInfoResponse
 from common.exchange.etrade.etrade_connector import ETradeConnector
-
+from common.finance.amount import Amount
 
 DEFAULT_INST_TYPE = "BROKERAGE"
 
@@ -31,11 +32,15 @@ class ETradeAccountService(AccountService):
 
     def get_account_balance(self, get_account_info_request: GetAccountBalanceRequest) -> GetAccountBalanceResponse:
         account_id = get_account_info_request.account_id
-        path = f"/v1/accounts/{account_id}/balance.json?instType={DEFAULT_INST_TYPE}&realTimeNAV=true"
+        path = f"/v1/accounts/{account_id}/balance.json"
+
+        params: dict[str, str] = dict[str, str]()
+
+        params["instType"] = DEFAULT_INST_TYPE
+        params["realTimeNAV"] = "true"
+
         url = self.base_url + path
-        response = self.session.get(url)
-        print(response.request.headers)
-        print(response.url)
+        response = self.session.get(url, params=params)
 
         account_balance: AccountBalance = ETradeAccountService._parse_account_balance_response(response)
 
@@ -82,14 +87,39 @@ class ETradeAccountService(AccountService):
             message = data['Error']['message']
             raise Exception(f"Error from E*Trade: {input.status_code}: {message}")
 
+        balance_response = data["BalanceResponse"]
+        computed = balance_response["Computed"]
 
-        account_id = data["accountId"]
-        as_of_date = datetime.timestamp(data["asOfDate"])
+        realtime_values = computed["RealTimeValues"]
+        open_calls = computed["OpenCalls"]
+
+
+
+        account_id = balance_response["accountId"]
+        total_account_value = realtime_values["totalAccountValue"]
+        as_of_date = datetime.now()
+
+        cash_available_for_investment: Amount = Amount.from_string(str(computed['settledCashForInvestment'])) + Amount.from_string(str(computed['unSettledCashForInvestment']))
+        cash_available_for_withdrawal: Amount = Amount.from_string(str(computed['cashAvailableForWithdrawal']))
+        net_cash: Amount = Amount.from_float(computed["netCash"])
+        cash_balance: Amount = Amount.from_float(computed["cashBalance"])
+        margin_buying_power: Amount = Amount.from_float(computed["marginBuyingPower"])
+        cash_buying_power: Amount = Amount.from_float(computed["cashBuyingPower"])
+        margin_balance: Amount = Amount.from_float(computed["marginBalance"])
+        account_balance: Amount = Amount.from_float(computed["accountBalance"])
+
+        brokerage_calls: list[BrokerageCall] = []
+        for call_type, call_value in open_calls.items():
+            if call_value < 0:
+                brokerage_call_type: BrokerageCallType = BrokerageCallType.from_string(call_type)
+                amount: Amount = Amount.from_float(call_value)
+                brokerage_calls.append(BrokerageCall(brokerage_call_type, amount))
 
         # TODO: Update these with real values
-        computed_balance: ComputedBalance = ComputedBalance()
+        computed_balance: ComputedBalance = ComputedBalance(cash_available_for_investment,
+                                                            cash_available_for_withdrawal,net_cash, cash_balance,
+                                                            margin_buying_power, cash_buying_power, margin_balance,
+                                                            account_balance)
 
-        account_balance: AccountBalance = AccountBalance(account_id, as_of_date, computed_balance)
+        account_balance: AccountBalance = AccountBalance(account_id, total_account_value, as_of_date,  computed_balance, brokerage_calls)
         return account_balance
-
-

@@ -4,7 +4,7 @@ from common.order.order_price_type import OrderPriceType
 
 class OrderPrice:
     def __init__(self, order_price_type: OrderPriceType, price: Amount):
-        self.order_price_type: OrderPrice = order_price_type
+        self.order_price_type: OrderPriceType = order_price_type
 
         if order_price_type is OrderPriceType.EVEN and price != Amount(0,0):
             raise Exception("Cannot have a price when it is supposed to be EVEN")

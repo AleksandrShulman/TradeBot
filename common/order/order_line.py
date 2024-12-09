@@ -3,7 +3,7 @@ from common.finance.tradable import Tradable
 
 
 class OrderLine:
-    def __init__(self, tradable: Tradable, quantity: int, action: Action):
+    def __init__(self, tradable: Tradable, action: Action, quantity: int, quantity_filled: int = 0):
         if not quantity or type(quantity) is not int or quantity < 1:
             raise Exception(f"Invalid value for quantity: {quantity}")
 
@@ -14,8 +14,9 @@ class OrderLine:
             raise Exception(f"Tradable required")
 
         self.tradable = tradable
-        self.quantity = quantity
         self.action = action
+        self.quantity = quantity
+        self.quantity_filled = quantity_filled
 
     def __str__(self):
         return f"{self.action}: {self.quantity} x {self.tradable}"

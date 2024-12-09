@@ -2,6 +2,8 @@ import configparser
 import os
 from datetime import datetime
 
+import pytest
+
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
 from common.api.orders.order_list_request import OrderListRequest
 from common.api.orders.order_service import OrderService
@@ -24,13 +26,19 @@ MAX_COUNT = 1000
 
 config = configparser.ConfigParser()
 
-if __name__ == "__main__":
+@pytest.fixture
+def order_service():
     config.read(CONFIG_FILE)
     connector: ETradeConnector = ETradeConnector()
     o: OrderService = ETradeOrderService(connector)
+    return o
+
+def test_get_orders(order_service: OrderService):
     account_key = config['ETRADE'][ACCOUNT_ID_KEY]
 
-    list_order_request = OrderListRequest(account_key, OrderStatus.OPEN, JAN_1_2024, TODAY, 50 )
-    orders = o.list_orders(list_order_request, None)
-
+    list_order_request = OrderListRequest(account_key, OrderStatus.OPEN, JAN_1_2024, TODAY, 50)
+    orders = order_service.list_orders(list_order_request, dict())
     print(orders)
+
+if __name__ == "__main__":
+    pytest.main()
