@@ -125,3 +125,15 @@ class Chain:
                 self.expiry_strike_chain_call[expiry] = dict()
             for strike in other.expiry_strike_chain_call[expiry]:
                 self.expiry_strike_chain_call[expiry][strike] = other.expiry_strike_chain_call[expiry][strike].copy_of()
+
+        for strike in other.strike_expiry_chain_put:
+            if strike not in self.strike_expiry_chain_put:
+                self.strike_expiry_chain_put[strike] = dict()
+            for expiry in other.strike_expiry_chain_put[strike]:
+                self.strike_expiry_chain_put[strike][expiry] = other.strike_expiry_chain_put[strike][expiry].copy_of()
+
+        for strike in other.strike_expiry_chain_call:
+            if strike not in self.strike_expiry_chain_call:
+                self.strike_expiry_chain_call[strike] = dict()
+            for expiry in other.strike_expiry_chain_call[strike]:
+                self.strike_expiry_chain_call[strike][expiry] = other.strike_expiry_chain_call[strike][expiry].copy_of()

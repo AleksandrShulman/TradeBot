@@ -106,6 +106,9 @@ class Amount:
 
         return nominal < nominal_other
 
+    def __gt__(self, other):
+        return not self.__le__(other)
+
     def __eq__(self, other):
         if other.currency != self.currency:
             return False
