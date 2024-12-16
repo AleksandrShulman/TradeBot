@@ -20,19 +20,25 @@ DEFAULT_NUM_STRIKES = 15
 DEFAULT_DELTA_FROM_CURRENT_PRICE = 5
 
 class CalendarSpreadCell:
-    def __init__(self, starting_expiry: datetime.datetime.date, ending_expiry: datetime.datetime.date, starting_strike_value: Amount, ending_strike_value: Amount):
+    def __init__(self, starting_expiry: datetime.datetime.date, ending_expiry: datetime.datetime.date, atm_spread_value: (Amount, Amount), otm_spread_values: (Amount, Amount)):
         self.starting_expiry: datetime.datetime.date = starting_expiry
         self.ending_expiry: datetime.datetime.date = ending_expiry
-        self.starting_strike_value: Amount = starting_strike_value
-        self.ending_strike_value: Amount = ending_strike_value
+        self.atm_spread_values: (Amount, Amount) = atm_spread_value
+        self.otm_spread_values: (Amount, Amount) = otm_spread_values
+
+        self.atm_spread_value: Amount = self.atm_spread_values[1] - self.atm_spread_values[0]
+        self.otm_spread_value: Amount = self.otm_spread_values[1] - self.otm_spread_values[0]
+
+        # This is the ratio between the reference calendar spread at that date, vs the OTM one
         self.ratio: float = self.get_price_ratio()
+        # This is the price difference between the reference calendar spread at that date, vs the OTM one
         self.price_difference = self.get_price_difference()
 
     def get_price_ratio(self) -> float:
-        return float(self.ending_strike_value / self.starting_strike_value)
+        return float(self.atm_spread_value / self.otm_spread_value)
 
     def get_price_difference(self) -> Amount:
-        return self.ending_strike_value - self.starting_strike_value
+        return self.atm_spread_value - self.otm_spread_value
 
 class CalendarSpreadConstructor:
     def __init__(self, qs: QuoteService, equity: Equity, num_strikes: int = DEFAULT_NUM_STRIKES):
@@ -68,45 +74,56 @@ class CalendarSpreadConstructor:
 
         # to nearest $.5
         #current_price_to_nearest_dollar: float = round(current_price*2)/2
-        current_price_to_nearest_dollar: float = round(current_price)
-        print(f"Current price to nearest dollar is: {current_price_to_nearest_dollar}")
-
+        atm_price_float: float = round(current_price)
+        atm_price = Amount.from_float(atm_price_float)
+        print(f"Current price to nearest dollar is: {atm_price}")
 
         calls = self.options_chain.strike_expiry_chain_call
         puts = self.options_chain.strike_expiry_chain_put
 
-        call_price = Amount.from_float(current_price_to_nearest_dollar + delta_from_current_price)
-        put_price = Amount.from_float(current_price_to_nearest_dollar - delta_from_current_price)
+        otm_call_price = Amount.from_float(atm_price_float + delta_from_current_price)
+        otm_put_price = Amount.from_float(atm_price_float - delta_from_current_price)
 
-        call_chain: dict[datetime, Price] = SortedDict(calls[call_price])
-        put_chain: dict[datetime, Price] = SortedDict(puts[put_price])
+        otm_call_chain: dict[datetime, Price] = SortedDict(calls[otm_call_price])
+        otm_put_chain: dict[datetime, Price] = SortedDict(puts[otm_put_price])
 
-        call_output: dict[datetime, datetime, CalendarSpreadCell] = dict[datetime, datetime, CalendarSpreadCell]()
-        put_output: dict[datetime, datetime, CalendarSpreadCell] = dict[datetime, datetime, CalendarSpreadCell]()
+        atm_call_chain: dict[datetime, Price] = SortedDict(calls[atm_price])
+        atm_put_chain: dict[datetime, Price] = SortedDict(puts[atm_price])
+
+        otm_call_output: dict[datetime, datetime, CalendarSpreadCell] = dict[datetime, datetime, CalendarSpreadCell]()
+        otm_put_output: dict[datetime, datetime, CalendarSpreadCell] = dict[datetime, datetime, CalendarSpreadCell]()
+
+        atm_call_output: dict[datetime, datetime, CalendarSpreadCell] = dict[datetime, datetime, CalendarSpreadCell]()
+        atm_put_output: dict[datetime, datetime, CalendarSpreadCell] = dict[datetime, datetime, CalendarSpreadCell]()
 
         # Calls
-        for calendar_start_index, (calendar_start_date, start_price)  in enumerate(call_chain.items()):
-            for calendar_end_index, (calendar_end_date,  end_price) in enumerate(call_chain.items()):
+        for calendar_start_index, (calendar_start_date, otm_start_price)  in enumerate(otm_call_chain.items()):
+            for calendar_end_index, (calendar_end_date,  otm_end_price) in enumerate(otm_call_chain.items()):
                 if calendar_start_date >= calendar_end_date:
                     continue
 
-                cell = CalendarSpreadCell(calendar_start_date, calendar_end_date, Amount.from_float(start_price.mark), Amount.from_float(end_price.mark))
-                if calendar_start_date not in call_output:
-                    call_output[calendar_start_date] = dict[datetime, CalendarSpreadCell]()
-                call_output[calendar_start_date][calendar_end_index] = cell
+                otm_prices = (Amount.from_float(otm_start_price.mark), Amount.from_float(otm_end_price.mark))
+                atm_prices = (Amount.from_float(atm_call_chain[calendar_start_date].mark), Amount.from_float(atm_call_chain[calendar_end_date].mark))
+                cell = CalendarSpreadCell(calendar_start_date, calendar_end_date, atm_prices, otm_prices)
+
+                if calendar_start_date not in otm_call_output:
+                    otm_call_output[calendar_start_date] = dict[datetime, CalendarSpreadCell]()
+                otm_call_output[calendar_start_date][calendar_end_index] = cell
 
         # Puts
-        for calendar_start_index, (calendar_start_date, start_price) in enumerate(put_chain.items()):
-            for calendar_end_index, (calendar_end_date, end_price) in enumerate(put_chain.items()):
+        for calendar_start_index, (calendar_start_date, otm_start_price) in enumerate(otm_put_chain.items()):
+            for calendar_end_index, (calendar_end_date, otm_end_price) in enumerate(otm_put_chain.items()):
                 if calendar_start_date >= calendar_end_date:
                     continue
 
-                cell = CalendarSpreadCell(calendar_start_date, calendar_end_date, Amount.from_float(start_price.mark), Amount.from_float(end_price.mark))
-                if calendar_start_date not in put_output:
-                    put_output[calendar_start_date] = dict[datetime, CalendarSpreadCell]()
-                put_output[calendar_start_date][calendar_end_index] = cell
+                otm_prices = (Amount.from_float(otm_start_price.mark), Amount.from_float(otm_end_price.mark))
+                atm_prices = (Amount.from_float(atm_put_chain[calendar_start_date].mark),
+                              Amount.from_float(atm_put_chain[calendar_end_date].mark))
+                cell = CalendarSpreadCell(calendar_start_date, calendar_end_date, atm_prices, otm_prices)
+                if calendar_start_date not in otm_put_output:
+                    otm_put_output[calendar_start_date] = dict[datetime, CalendarSpreadCell]()
+                otm_put_output[calendar_start_date][calendar_end_index] = cell
 
-        pass
 
 if __name__ == "__main__":
     connector: ETradeConnector = ETradeConnector()
