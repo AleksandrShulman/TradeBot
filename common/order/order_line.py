@@ -13,10 +13,10 @@ class OrderLine:
         if not tradable:
             raise Exception(f"Tradable required")
 
-        self.tradable = tradable
-        self.action = action
-        self.quantity = quantity
-        self.quantity_filled = quantity_filled
+        self.tradable: Tradable = tradable
+        self.action: Action = action
+        self.quantity: int = quantity
+        self.quantity_filled: int = quantity_filled
 
     def __str__(self):
         return f"{self.action}: {self.quantity} x {self.tradable}"

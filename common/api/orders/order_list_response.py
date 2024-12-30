@@ -1,10 +1,10 @@
 from common.api.response import Response
-from common.order.order import Order
+from common.order.placed_order import PlacedOrder
 
 
 class OrderListResponse(Response):
-    def __init__(self, order_list: list[Order]):
-        self.order_list = order_list
+    def __init__(self, order_list: list[PlacedOrder]):
+        self.order_list: list[PlacedOrder] = order_list
 
     def get_order_list(self):
         return self.order_list

@@ -6,7 +6,7 @@ class OrderPrice:
     def __init__(self, order_price_type: OrderPriceType, price: Amount):
         self.order_price_type: OrderPriceType = order_price_type
 
-        if order_price_type is OrderPriceType.EVEN and price != Amount(0,0):
+        if order_price_type is OrderPriceType.NET_EVEN and price != Amount(0,0):
             raise Exception("Cannot have a price when it is supposed to be EVEN")
 
         self.price: Amount = price

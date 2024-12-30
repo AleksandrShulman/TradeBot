@@ -1,10 +1,10 @@
 
 from common.order.executed_order_details import ExecutionOrderDetails
-from common.order.order import Order
+from common.order.placed_order import PlacedOrder
 
 
 class ExecutedOrder:
-    def __init__(self, order: Order, execution_order_details: ExecutionOrderDetails):
+    def __init__(self, order: PlacedOrder, execution_order_details: ExecutionOrderDetails):
         self.order = order
         self.execution_details = execution_order_details
 

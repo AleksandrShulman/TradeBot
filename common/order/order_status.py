@@ -9,5 +9,6 @@ class OrderStatus(Enum):
     INDIVIDUAL_FILLS = 4,
     CANCEL_REQUESTED = 5,
     EXPIRED = 6,
-    REJECTED = 7
-    ANY = 8
+    REJECTED = 7,
+    PRE_SUBMISSION = 8,
+    ANY = 9

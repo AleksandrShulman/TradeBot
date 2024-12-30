@@ -15,7 +15,6 @@ from common.order.order import Order
 from common.order.order_line import OrderLine
 from common.order.order_price import OrderPrice
 from common.order.order_price_type import OrderPriceType
-from common.order.order_status import OrderStatus
 
 e: Equity = Equity("GE", "General Electric")
 
@@ -23,17 +22,14 @@ e: Equity = Equity("GE", "General Electric")
 def test_build_single_line_order():
     strike: Amount = Amount(10,0, Currency.US_DOLLARS)
 
-    account_id: str = 'abc987'
-    order_id: int = 123
+    order_id: str = "123"
     order_expiry: OrderExpiry = GoodForDay()
     call_option: Tradable = Option(e, OptionType.CALL, strike, datetime.datetime(2024, 11, 5).date(), ExerciseStyle.AMERICAN)
     order_line = OrderLine(call_option,  Action.SELL_OPEN, 1)
     order_price: OrderPrice = OrderPrice(OrderPriceType.NET_CREDIT, Amount(0, 14, Currency.US_DOLLARS))
-    order_placed_time: datetime.datetime = datetime.datetime.now()
-    order_status: OrderStatus = OrderStatus.OPEN
     market_session: MarketSession = MarketSession.BOTH
 
-    single_order = Order(account_id, order_id,order_expiry, [order_line], order_price, order_placed_time, order_status, market_session)
+    single_order = Order(order_id, order_expiry, [order_line], order_price, market_session)
 
     assert single_order is not None
 
@@ -41,8 +37,7 @@ def test_build_single_line_order():
 def test_build_dual_line_order():
     strike: Amount = Amount(10, 0, Currency.US_DOLLARS)
 
-    account_id: str = 'abc987'
-    order_id: int = 123
+    order_id: str = "123"
     order_expiry: OrderExpiry = GoodForDay()
     call_option: Tradable = Option(e, OptionType.CALL, strike, datetime.datetime(2024, 11, 5).date(),
                                    ExerciseStyle.AMERICAN)
@@ -53,10 +48,8 @@ def test_build_dual_line_order():
     order_line2 = OrderLine(call_option2, Action.BUY_OPEN, 1)
 
     order_price: OrderPrice = OrderPrice(OrderPriceType.NET_CREDIT, Amount(0, 14, Currency.US_DOLLARS))
-    order_placed_time: datetime.datetime = datetime.datetime.now()
-    order_status: OrderStatus = OrderStatus.OPEN
     market_session: MarketSession = MarketSession.BOTH
 
-    dual_order = Order(account_id, order_id, order_expiry, [order_line, order_line2], order_price, order_placed_time, order_status, market_session)
+    dual_order = Order(order_id, order_expiry, [order_line, order_line2], order_price, market_session)
 
     assert dual_order is not None
