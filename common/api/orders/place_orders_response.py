@@ -2,7 +2,6 @@ from common.api.orders.OrderPlacementMessage import OrderPlacementMessage
 from common.api.response import Response
 from common.order.order import Order
 
-
 class PlaceOrdersResponse(Response):
     def __init__(self, order_ids: list[str],orders: list[Order], messages: list[OrderPlacementMessage]):
         self.order_ids: list[str] = order_ids

@@ -1,9 +1,13 @@
 import configparser
 import os
+import string
 from datetime import datetime
+from random import choices
 
 import pytest
 
+from common.api.orders.cancel_order_request import CancelOrderRequest
+from common.api.orders.cancel_order_response import CancelOrderResponse
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
 from common.api.orders.order_list_request import OrderListRequest
 from common.api.orders.order_service import OrderService
@@ -70,7 +74,7 @@ def test_equity_order_for_preview_and_place(order_service: OrderService, account
 
     order_lines.append(ol_1)
 
-    client_order_id = "abc148"
+    client_order_id = "".join(choices(string.ascii_uppercase + string.digits, k=5))
     order = Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR, client_order_id)
     orders = [order]
     p : PreviewOrdersRequest = PreviewOrdersRequest(order_type, account_id, orders)
@@ -81,6 +85,37 @@ def test_equity_order_for_preview_and_place(order_service: OrderService, account
     place_order_request: PlaceOrdersRequest = PlaceOrdersRequest(account_id, order_type, orders, preview_ids)
     place_order_response: PlaceOrdersResponse = order_service.place_order(place_order_request)
     print(place_order_response)
+
+def test_equity_order_for_preview_place_and_cancel(order_service: OrderService, account_key: str):
+    order_type: OrderType = OrderType.EQ
+    account_id = account_key
+    order_lines: list[OrderLine]  = list()
+
+    tradable: Equity = Equity("GE", "General Electric")
+    ol_1 = OrderLine(tradable, Action.BUY, 5)
+
+    order_price: OrderPrice = OrderPrice(OrderPriceType.LIMIT, Amount(100,0) )
+
+    order_lines.append(ol_1)
+
+    client_order_id = "".join(choices(string.ascii_uppercase + string.digits, k=5))
+
+    order = Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR, client_order_id)
+    orders = [order]
+    p : PreviewOrdersRequest = PreviewOrdersRequest(order_type, account_id, orders)
+    preview_order_response = order_service.preview_orders(p)
+
+    preview_ids: list[str] = [preview for preview in preview_order_response.order_previews]
+
+    place_order_request: PlaceOrdersRequest = PlaceOrdersRequest(account_id, order_type, orders, preview_ids)
+    place_order_response: PlaceOrdersResponse = order_service.place_order(place_order_request)
+    print(place_order_response)
+
+    order_id = place_order_response.order_ids[0]["orderId"]
+    cancel_order_request: CancelOrderRequest = CancelOrderRequest(account_id, order_id)
+    cancel_order_response: CancelOrderResponse = order_service.cancel_order(cancel_order_request)
+    print(cancel_order_response)
+
 
 def test_option_order_for_preview_and_place(order_service: OrderService, account_key: str):
     order_type: OrderType = OrderType.SPREADS
@@ -100,7 +135,7 @@ def test_option_order_for_preview_and_place(order_service: OrderService, account
     order_lines.append(ol_1)
     order_lines.append(ol_2)
 
-    client_order_id = "abc151"
+    client_order_id = "".join(choices(string.ascii_uppercase + string.digits, k=5))
     order = Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR, client_order_id)
     orders = [order]
     p : PreviewOrdersRequest = PreviewOrdersRequest(order_type, account_id, orders)

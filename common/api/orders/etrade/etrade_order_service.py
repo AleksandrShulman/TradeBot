@@ -1,7 +1,8 @@
 import json
 from datetime import datetime
-from statistics import quantiles
 
+from common.api.orders.cancel_order_request import CancelOrderRequest
+from common.api.orders.cancel_order_response import CancelOrderResponse
 from common.api.orders.etrade.converters.order_conversion_util import OrderConversionUtil
 from common.api.orders.etrade.etrade_order_response_message import ETradeOrderResponseMessage
 from common.api.orders.get_order_request import GetOrderRequest
@@ -17,18 +18,14 @@ from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.exchange.market_session import MarketSession
 from common.finance.amount import Amount
 from common.finance.equity import Equity
-from common.finance.exercise_style import ExerciseStyle
 from common.finance.option import Option
-from common.finance.option_type import OptionType
 from common.finance.tradable import Tradable
-from common.order.action import Action
 from common.order.executed_order import ExecutedOrder
 from common.order.executed_order_details import ExecutionOrderDetails
 from common.order.expiry.fill_or_kill import FillOrKill
 from common.order.expiry.good_for_day import GoodForDay
 from common.order.expiry.good_for_sixty_days import GoodForSixtyDays
 from common.order.expiry.good_until_cancelled import GoodUntilCancelled
-from common.order.expiry.order_expiry import OrderExpiry
 from common.order.order import Order
 from common.order.order_line import OrderLine
 from common.order.order_price import OrderPrice
@@ -45,7 +42,6 @@ class ETradeOrderService(OrderService):
         self.session, self.base_url = self.connector.load_connection()
 
     def list_orders(self, list_orders_request: OrderListRequest, exchange_specific_opts: dict[str, str]) -> OrderListResponse:
-        #account_id = list_orders_request.account_id
         account_id = list_orders_request.account_id
         path = f"/v1/accounts/{account_id}/orders.json"
         count = list_orders_request.count
@@ -70,6 +66,24 @@ class ETradeOrderService(OrderService):
 
     def get_order(self, get_order_request: GetOrderRequest) -> GetOrderResponse:
         pass
+
+    def cancel_order(self, cancel_order_request: CancelOrderRequest) -> CancelOrderResponse:
+        account_id = cancel_order_request.account_id
+        order_id = cancel_order_request.order_id
+
+        headers = {"Content-Type": "application/xml", "consumerKey": account_id}
+
+        # TODO: Weave through settings for priceType and possibly others.
+        path = f"/v1/accounts/{account_id}/orders/cancel.json"
+        payload = f"""
+            <CancelOrderRequest>
+              <orderId>{order_id}</orderId>
+            </CancelOrderRequest>"""
+
+        url = self.base_url + path
+        response = self.session.put(url, header_auth=True, headers=headers, data=payload)
+        print(response)
+        return ETradeOrderService._parse_cancel_order_response(response)
 
     @staticmethod
     def _build_order(order: Order)->str:
@@ -242,6 +256,21 @@ class ETradeOrderService(OrderService):
 
         return PlaceOrdersResponse(order_ids, orders, messages)
 
+    def _parse_cancel_order_response(input)-> CancelOrderResponse:
+        data = json.loads(input.text)
+        cancel_order_response = data["CancelOrderResponse"]
+
+        order_id = cancel_order_response["orderId"]
+        cancel_time = cancel_order_response["cancelTime"]
+
+        messages = []
+        for message in cancel_order_response['Messages']['Message']:
+            description = message['description']
+            code = message['code']
+            message_type = message['type']
+            messages.append(ETradeOrderResponseMessage(code, description, message_type))
+
+        return CancelOrderResponse(order_id, cancel_time, messages)
 
     @staticmethod
     def _parse_preview_orders_response(input)-> PreviewOrdersResponse:
