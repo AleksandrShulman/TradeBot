@@ -27,6 +27,9 @@ class Option(Tradable):
     def copy_of(self):
         return Option(self.equity, self.type, self.strike, self.expiry, self.style)
 
+    def __hash__(self):
+        return hash((self.equity, self.type, self.strike, self.expiry, self.style))
+
     def __eq__(self, other):
         if not type(other) == type(self):
             raise Exception(f"Cannot compare option to non-option: {self.type}")

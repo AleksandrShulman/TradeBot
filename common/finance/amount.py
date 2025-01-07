@@ -119,6 +119,9 @@ class Amount:
         if other.part != self.part:
             return False
 
+        if other.negative != self.negative:
+            return False
+
         return True
 
     def __hash__(self):

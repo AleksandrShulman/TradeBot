@@ -20,3 +20,19 @@ class OrderLine:
 
     def __str__(self):
         return f"{self.action}: {self.quantity} x {self.tradable}"
+
+    def __hash__(self):
+        return hash((self.tradable, self.action, self.quantity, self.quantity_filled))
+
+    def __eq__(self, other):
+        if self.tradable != other.tradable:
+            return False
+        if self.action != other.action:
+            return False
+        if self.quantity != other.quantity:
+            return False
+        if self.quantity_filled:
+            if self.quantity_filled != other.quantity_filled:
+                return False
+
+        return True

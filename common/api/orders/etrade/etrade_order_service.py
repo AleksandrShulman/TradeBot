@@ -1,4 +1,5 @@
 import json
+import pickle
 from datetime import datetime
 
 from common.api.orders.cancel_order_request import CancelOrderRequest
@@ -7,6 +8,8 @@ from common.api.orders.etrade.converters.order_conversion_util import OrderConve
 from common.api.orders.etrade.etrade_order_response_message import ETradeOrderResponseMessage
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
+from common.api.orders.modify_order_request import ModifyOrderRequest
+from common.api.orders.modify_order_response import ModifyOrderResponse, OrderModification
 from common.api.orders.order_list_request import OrderListRequest
 from common.api.orders.order_list_response import OrderListResponse
 from common.api.orders.order_service import OrderService
@@ -31,6 +34,7 @@ from common.order.order_line import OrderLine
 from common.order.order_price import OrderPrice
 from common.order.order_price_type import OrderPriceType
 from common.order.order_status import OrderStatus
+from common.order.order_type import OrderType
 from common.order.placed_order import PlacedOrder
 from common.order.placed_order_details import PlacedOrderDetails
 from common.order.tradable_type import TradableType
@@ -85,118 +89,42 @@ class ETradeOrderService(OrderService):
         print(response)
         return ETradeOrderService._parse_cancel_order_response(response)
 
-    @staticmethod
-    def _build_order(order: Order)->str:
+    def modify_order(self, modify_order_request: ModifyOrderRequest) -> ModifyOrderResponse:
+        preview_order_request = modify_order_request.preview_orders_request
+        order_type = preview_order_request.order_type
+        account_id = preview_order_request.account_id
+        client_order_id = preview_order_request.orders[0].client_order_id
+        order_id = modify_order_request.order_id
 
-        order_term = "GOOD_FOR_DAY"
-        if type(order.expiry) == GoodForDay:
-            order_term = "GOOD_FOR_DAY"
-        elif type(order.expiry) == GoodForSixtyDays:
-            order_term = "GOOD_TILL_DATE"
-        elif type(order.expiry) == GoodUntilCancelled:
-            order_term = "GOOD_UNTIL_CANCELLED"
-        elif type(order.expiry) == FillOrKill:
-            order_term = "FILL_OR_KILL"
+        headers = {"Content-Type": "application/xml", "consumerKey": account_id}
 
-        instruments = list[str]()
-        for order_line in order.order_lines:
-            instruments.append(ETradeOrderService._build_instrument(order_line))
+        # TODO: Weave through settings for priceType and possibly others.
+        path = f"/v1/accounts/{account_id}/orders/{order_id}/change/preview.json"
 
-        instrument_xml = "\n".join(instruments)
+        payload = ETradeOrderService._build_preview_order_xml(preview_order_request.orders, order_type, client_order_id)
 
-        return f"""<Order>
-                           <allOrNone>{order.expiry.all_or_none}</allOrNone>
-                           <priceType>{order.order_price.order_price_type.name}</priceType>
-                           <orderTerm>{order_term}</orderTerm>
-                           <marketSession>{order.market_session.name}</marketSession>
-                           <stopPrice />
-                           <limitPrice>{order.order_price.price}</limitPrice>
-                           {instrument_xml}
-                   </Order>
-        """
-
-    @staticmethod
-    def _build_instrument(order_line: OrderLine) -> str:
-        product_xml = ETradeOrderService._build_product_xml(order_line.tradable)
-        quantity = order_line.quantity
-        action = order_line.action
-
-        # TODO: See if `orderedQuantity` is necessary
-        return f"""
-           <Instrument>
-             <orderAction>{action.name}</orderAction>
-             <orderedQuantity>{quantity}</orderedQuantity>
-             <quantity>{quantity}</quantity>
-             {product_xml}
-           </Instrument>
-        """
-
-
-    @staticmethod
-    def _build_product_xml(tradable: Tradable)->str:
-        security_type = TradableType[type(tradable).__name__].value[0]
-        if type(tradable) is Equity:
-            e: Equity = tradable
-            symbol = e.ticker
-
-            return f"""<Product>
-                         <securityType>{security_type}</securityType>
-                         <symbol>{symbol}</symbol>
-                       </Product>
-            """
-
-        elif type(tradable) is Option:
-            o: Option = tradable
-
-            symbol = o.equity.ticker
-            strike_price: Amount = o.strike
-            call_put = str(o.type.name).upper()
-
-            expiry: datetime = o.expiry
-            expiry_day: int = expiry.day
-            expiry_month: int = expiry.month
-            expiry_year: int = expiry.year
-
-            return f"""<Product>
-                         <securityType>{security_type}</securityType>
-                         <symbol>{symbol}</symbol>
-                         <strikePrice>{strike_price.to_float()}</strikePrice>
-                         <expiryDay>{expiry_day}</expiryDay>
-                         <expiryMonth>{expiry_month}</expiryMonth>
-                         <expiryYear>{expiry_year}</expiryYear>
-                         <callPut>{call_put}</callPut>
-                       </Product>
-            """
-        else:
-            raise Exception(f"Tradable type not recognized, {type(tradable)}")
+        url = self.base_url + path
+        response = self.session.put(url, header_auth=True, headers=headers, data=payload)
+        print(response)
+        return ETradeOrderService._parse_modify_order_response(response)
 
     def preview_orders(self, preview_order_request: PreviewOrdersRequest) -> PreviewOrdersResponse:
         order_type = preview_order_request.order_type
         account_id = preview_order_request.account_id
-
         client_order_id = preview_order_request.orders[0].client_order_id
 
         headers = {"Content-Type": "application/xml", "consumerKey": account_id}
-
-        orders_xml: list[str] = []
-        for order in preview_order_request.orders:
-            orders_xml.append(ETradeOrderService._build_order(order))
-
-        orders_str = "\n".join(orders_xml)
-
-        # TODO: Weave through settings for priceType and possibly others.
         path = f"/v1/accounts/{account_id}/orders/preview.json"
-        payload = f"""<PreviewOrderRequest>
-                       <orderType>{order_type.name}</orderType>
-                         <clientOrderId>{client_order_id}</clientOrderId>
-                         {orders_str}
-                       </PreviewOrderRequest>"""
+
+        payload = ETradeOrderService._build_preview_order_xml(preview_order_request.orders, order_type, client_order_id)
 
         url = self.base_url + path
         response = self.session.post(url, header_auth=True, headers=headers, data=payload)
         print(response)
-        return ETradeOrderService._parse_preview_orders_response(response)
+        #with open('output_preview_order_spread', 'wb') as handle:
+        #    pickle.dump(response, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+        return ETradeOrderService._parse_preview_orders_response(response)
 
     def place_order(self, place_order_request: PlaceOrdersRequest) -> PlaceOrdersResponse:
         order_type = place_order_request.order_type
@@ -213,7 +141,7 @@ class ETradeOrderService(OrderService):
 
         orders_xml: list[str] = []
         for order in place_order_request.orders:
-            orders_xml.append(ETradeOrderService._build_order(order))
+            orders_xml.append(OrderConversionUtil.build_order(order))
 
         orders_str = "\n".join(orders_xml)
 
@@ -232,14 +160,16 @@ class ETradeOrderService(OrderService):
 
         url = self.base_url + path
         response = self.session.post(url, header_auth=True, headers=headers, data=payload)
+        with open('output_place_order_spread', 'wb') as handle:
+            pickle.dump(response, handle, protocol=pickle.HIGHEST_PROTOCOL)
         print(response)
-        return ETradeOrderService._parse_place_orders_response(response)
+        return ETradeOrderService._parse_place_orders_response(response, client_order_id)
 
     @staticmethod
-    def _parse_place_orders_response(input)-> PlaceOrdersResponse:
+    def _parse_place_orders_response(input, client_order_id: str)-> PlaceOrdersResponse:
         data = json.loads(input.text)
         place_order_response = data["PlaceOrderResponse"]
-        order_ids = place_order_response['OrderIds']
+        order_ids: list[str] = [order_id["orderId"] for order_id in place_order_response['OrderIds']]
         order_dicts = place_order_response["Order"]
 
         order_ids_to_orders = zip(order_dicts, order_ids)
@@ -252,7 +182,7 @@ class ETradeOrderService(OrderService):
                 message_type = message['type']
                 messages.append(ETradeOrderResponseMessage(code, description, message_type))
 
-        orders = [OrderConversionUtil.to_order_from_json(order_dict, order_id["orderId"]) for (order_dict, order_id) in order_ids_to_orders]
+        orders = [OrderConversionUtil.to_order_from_json(order_dict, order_id, client_order_id) for (order_dict, order_id) in order_ids_to_orders]
 
         return PlaceOrdersResponse(order_ids, orders, messages)
 
@@ -276,24 +206,26 @@ class ETradeOrderService(OrderService):
     def _parse_preview_orders_response(input)-> PreviewOrdersResponse:
         data = json.loads(input.text)
         preview_order_response = data["PreviewOrderResponse"]
-        order_previews = list()
+        order_previews: list[OrderPreview] = list()
         preview_ids: list[dict[str:str]] = preview_order_response["PreviewIds"]
         orders: list[dict] = preview_order_response["Order"]
         for index, preview_id in enumerate(preview_ids):
-            order_preview = OrderPreview(preview_id, orders[index]["estimatedTotalAmount"], orders[index]["estimatedCommission"])
-            order_previews.append(order_preview.preview_id["previewId"])
+            order_preview: OrderPreview = OrderPreview(preview_id["previewId"],
+                                                       Amount.from_float(orders[index]["estimatedTotalAmount"]),
+                                                       Amount.from_float(orders[index]["estimatedCommission"]))
+            order_previews.append(order_preview)
 
         return PreviewOrdersResponse(order_previews)
 
     @staticmethod
-    def _parse_order_list_response(response, account_id) -> list[Order]:
+    def _parse_order_list_response(response, account_id) -> list[PlacedOrder]:
         if response.status_code == '204':
-            return list[Order]()
+            return list[PlacedOrder]()
 
         data = response.json()
         print(data)
 
-        return_order_list: list[Order] = []
+        return_order_list: list[PlacedOrder] = []
 
         orders_response = data["OrdersResponse"]
         orders = orders_response['Order']
@@ -322,7 +254,39 @@ class ETradeOrderService(OrderService):
             placed_order: PlacedOrder = PlacedOrder(o, placed_order_details)
             if status == OrderStatus.EXECUTED:
                 execution_order_details: ExecutionOrderDetails = ExecutionOrderDetails(Amount.from_float(order_detail["orderValue"]), datetime.fromtimestamp(order_detail["executedTime"]/1000))
-                o: ExecutedOrder = ExecutedOrder(placed_order, execution_order_details)
-            return_order_list.append(o)
+                executed_order: ExecutedOrder = ExecutedOrder(placed_order, execution_order_details)
+
+                # TODO: Build an interface that all orders (executed, placed, or just plain) can use so that I categorize them as such
+                return_order_list.append(executed_order)
+            else:
+                return_order_list.append(placed_order)
 
         return return_order_list
+
+    @staticmethod
+    def _parse_modify_order_response(input):
+        data = json.loads(input.text)
+        modify_order_response = data["PreviewOrderResponse"]
+        order_modifications = list()
+        preview_ids: list[dict[str:str]] = modify_order_response["PreviewIds"]
+        orders: list[dict] = modify_order_response["Order"]
+        for index, preview_id in enumerate(preview_ids):
+            order_modification = OrderModification(orders[index], preview_id)
+            order_modifications.append(order_modification.preview_id["previewId"])
+
+        return ModifyOrderResponse(order_modifications)
+
+
+    @staticmethod
+    def _build_preview_order_xml(orders, order_type: OrderType, client_order_id: str)->str:
+        orders_xml: list[str] = []
+        for order in orders:
+            orders_xml.append(OrderConversionUtil.build_order(order))
+
+        orders_str = "\n".join(orders_xml)
+        return f"""<PreviewOrderRequest>
+                               <orderType>{order_type.name}</orderType>
+                                 <clientOrderId>{client_order_id}</clientOrderId>
+                                 {orders_str}
+                               </PreviewOrderRequest>"""
+

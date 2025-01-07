@@ -13,3 +13,11 @@ class OrderPrice:
 
     def __str__(self):
         return f"{self.order_price_type.name}: {self.price}"
+
+    def __eq__(self, other):
+        if self.order_price_type != other.order_price_type:
+            return False
+        if self.price != other.price:
+            return False
+
+        return True

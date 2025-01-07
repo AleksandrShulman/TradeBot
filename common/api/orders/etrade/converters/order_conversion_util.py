@@ -6,8 +6,11 @@ from common.finance.equity import Equity
 from common.finance.exercise_style import ExerciseStyle
 from common.finance.option import Option
 from common.finance.option_type import OptionType
+from common.finance.tradable import Tradable
 from common.order.action import Action
+from common.order.expiry.fill_or_kill import FillOrKill
 from common.order.expiry.good_for_day import GoodForDay
+from common.order.expiry.good_for_sixty_days import GoodForSixtyDays
 from common.order.expiry.good_until_cancelled import GoodUntilCancelled
 from common.order.expiry.good_until_date import GoodUntilDate
 from common.order.expiry.order_expiry import OrderExpiry
@@ -21,17 +24,16 @@ from common.order.tradable_type import TradableType
 class OrderConversionUtil:
 
     @staticmethod
-    def to_order_from_json(order: dict, order_id: str)->Order:
-
+    def to_order_from_json(order: dict, order_id: str, client_order_id=None)->Order:
         expiry: OrderExpiry = OrderConversionUtil.get_expiry_from_order(order)
 
-        order_price_type = OrderPriceType[order["priceType"]].name
+        order_price_type = OrderPriceType[order["priceType"]]
         limit_price: OrderPrice = OrderPrice(order_price_type, Amount.from_float(order["limitPrice"]))
-        market_session = MarketSession[order["marketSession"]].name
+        market_session = MarketSession[order["marketSession"]]
 
         order_lines: list[OrderLine] = OrderConversionUtil.process_instrument_to_orderlines(order)
 
-        order: Order = Order(order_id, expiry, order_lines, limit_price, market_session)
+        order: Order = Order(order_id, expiry, order_lines, limit_price, market_session, client_order_id)
         return order
 
     @staticmethod
@@ -39,7 +41,7 @@ class OrderConversionUtil:
         order_lines: list[OrderLine] = list[OrderLine]()
         for instrument in order["Instrument"]:
             quantity = instrument['quantity']
-            filled_quantity = instrument["filledQuantity"] if "filledQuantity" in instrument else None
+            filled_quantity: int = instrument["filledQuantity"] if "filledQuantity" in instrument else 0
             order_action = Action[instrument['orderAction']]
             product = instrument["Product"]
             symbol = product['symbol']
@@ -80,48 +82,86 @@ class OrderConversionUtil:
             # TODO: It's not clear where we get the value for GoodUntilDate
             return GoodUntilDate(datetime.date.today(), all_or_none)
 
-"""
+    @staticmethod
+    def build_order(order: Order) -> str:
 
-"Order": [
-            {
-                "orderTerm": "GOOD_FOR_DAY",
-                "priceType": "LIMIT",
-                "limitPrice": 100,
-                "stopPrice": 0,
-                "marketSession": "REGULAR",
-                "allOrNone": false,
-                "messages": {
-                    "Message": [
-                        {
-                            "description": "200|The market was closed when we received your order. It has been entered into our system and will be reviewed prior to market open on the next regular trading day. After market open, please check to make sure your order was accepted.",
-                            "code": 1027,
-                            "type": "WARNING"
-                        }
-                    ]
-                },
-                "egQual": "EG_QUAL_UNSPECIFIED",
-                "estimatedCommission": 0,
-                "estimatedTotalAmount": 500,
-                "netPrice": 0,
-                "netBid": 0,
-                "netAsk": 0,
-                "gcd": 0,
-                "ratio": "",
-                "Instrument": [
-                    {
-                        "symbolDescription": "GE AEROSPACE COM NEW",
-                        "orderAction": "BUY",
-                        "quantityType": "QUANTITY",
-                        "quantity": 5,
-                        "cancelQuantity": 0,
-                        "reserveOrder": true,
-                        "reserveQuantity": 0,
-                        "Product": {
-                            "symbol": "GE",
-                            "securityType": "EQ"
-                        }
-                    }
-                ]
-            }
-        ]
-"""
+        order_term = "GOOD_FOR_DAY"
+        if type(order.expiry) == GoodForDay:
+            order_term = "GOOD_FOR_DAY"
+        elif type(order.expiry) == GoodForSixtyDays:
+            order_term = "GOOD_TILL_DATE"
+        elif type(order.expiry) == GoodUntilCancelled:
+            order_term = "GOOD_UNTIL_CANCELLED"
+        elif type(order.expiry) == FillOrKill:
+            order_term = "FILL_OR_KILL"
+
+        instruments = list[str]()
+        for order_line in order.order_lines:
+            instruments.append(OrderConversionUtil.build_instrument(order_line))
+
+        instrument_xml = "\n".join(instruments)
+
+        return f"""<Order>
+                               <allOrNone>{order.expiry.all_or_none}</allOrNone>
+                               <priceType>{order.order_price.order_price_type.name}</priceType>
+                               <orderTerm>{order_term}</orderTerm>
+                               <marketSession>{order.market_session.name}</marketSession>
+                               <stopPrice />
+                               <limitPrice>{order.order_price.price}</limitPrice>
+                               {instrument_xml}
+                       </Order>
+            """
+
+    @staticmethod
+    def build_instrument(order_line: OrderLine) -> str:
+        product_xml = OrderConversionUtil.build_product_xml(order_line.tradable)
+        quantity = order_line.quantity
+        action = order_line.action
+
+        # TODO: See if `orderedQuantity` is necessary
+        return f"""
+               <Instrument>
+                 <orderAction>{action.name}</orderAction>
+                 <orderedQuantity>{quantity}</orderedQuantity>
+                 <quantity>{quantity}</quantity>
+                 {product_xml}
+               </Instrument>
+            """
+
+    @staticmethod
+    def build_product_xml(tradable: Tradable) -> str:
+        security_type = TradableType[type(tradable).__name__].value[0]
+        if type(tradable) is Equity:
+            e: Equity = tradable
+            symbol = e.ticker
+
+            return f"""<Product>
+                             <securityType>{security_type}</securityType>
+                             <symbol>{symbol}</symbol>
+                           </Product>
+                """
+
+        elif type(tradable) is Option:
+            o: Option = tradable
+
+            symbol = o.equity.ticker
+            strike_price: Amount = o.strike
+            call_put = str(o.type.name).upper()
+
+            expiry: datetime = o.expiry
+            expiry_day: int = expiry.day
+            expiry_month: int = expiry.month
+            expiry_year: int = expiry.year
+
+            return f"""<Product>
+                             <securityType>{security_type}</securityType>
+                             <symbol>{symbol}</symbol>
+                             <strikePrice>{strike_price.to_float()}</strikePrice>
+                             <expiryDay>{expiry_day}</expiryDay>
+                             <expiryMonth>{expiry_month}</expiryMonth>
+                             <expiryYear>{expiry_year}</expiryYear>
+                             <callPut>{call_put}</callPut>
+                           </Product>
+                """
+        else:
+            raise Exception(f"Tradable type not recognized, {type(tradable)}")
