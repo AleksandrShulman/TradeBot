@@ -36,4 +36,4 @@ Contains basic primitives such as financial instrument definitions used througho
 
 ## Liability
 This project makes no guarantees of any kind, explicit, or implicit, for its correctness, safety, or even suitability for its purpose. Contributors and users should use their best care and judgement when using this project.
-While care is taken to build a robust, scalable, and correct system, users at completely at their own risk in using it.
+While care is taken to build a robust, scalable, and correct system, use is completely at their own risk.
