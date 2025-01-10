@@ -4,14 +4,16 @@ from common.api.orders.cancel_order_request import CancelOrderRequest
 from common.api.orders.cancel_order_response import CancelOrderResponse
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
-from common.api.orders.modify_order_request import ModifyOrderRequest
-from common.api.orders.modify_order_response import ModifyOrderResponse
 from common.api.orders.order_list_request import OrderListRequest
 from common.api.orders.order_list_response import OrderListResponse
-from common.api.orders.place_orders_request import PlaceOrdersRequest
-from common.api.orders.place_orders_response import PlaceOrdersResponse
-from common.api.orders.preview_orders_request import PreviewOrdersRequest
-from common.api.orders.preview_orders_response import PreviewOrdersResponse
+from common.api.orders.place_modify_order_request import PlaceModifyOrderRequest
+from common.api.orders.place_modify_order_response import PlaceModifyOrderResponse
+from common.api.orders.place_order_request import PlaceOrderRequest
+from common.api.orders.place_order_response import PlaceOrderResponse
+from common.api.orders.preview_modify_order_request import PreviewModifyOrderRequest
+from common.api.orders.preview_modify_order_response import PreviewModifyOrderResponse
+from common.api.orders.preview_order_request import PreviewOrderRequest
+from common.api.orders.preview_order_response import PreviewOrderResponse
 from common.exchange.connector import Connector
 
 
@@ -28,11 +30,14 @@ class OrderService(ABC):
     def cancel_order(self, cancel_order_request: CancelOrderRequest) -> CancelOrderResponse:
         pass
 
-    def modify_order(self, modify_order_request: ModifyOrderRequest) -> ModifyOrderResponse:
+    def preview_modify_order(self, modify_order_request: PreviewModifyOrderRequest) -> PreviewModifyOrderResponse:
         pass
 
-    def preview_orders(self, preview_order_request: PreviewOrdersRequest) -> PreviewOrdersResponse:
+    def place_modify_order(self, modify_order_request: PlaceModifyOrderRequest) -> PlaceModifyOrderResponse:
         pass
 
-    def place_order(self, place_order_request: PlaceOrdersRequest) -> PlaceOrdersResponse:
+    def preview_order(self, preview_order_request: PreviewOrderRequest) -> PreviewOrderResponse:
+        pass
+
+    def place_order(self, place_order_request: PlaceOrderRequest) -> PlaceOrderResponse:
         pass

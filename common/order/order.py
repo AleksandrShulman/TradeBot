@@ -1,3 +1,4 @@
+import copy
 import datetime
 
 from common.exchange.market_session import MarketSession
@@ -8,15 +9,13 @@ from common.order.order_price import OrderPrice
 
 class Order:
     def __init__(self, order_id: str, expiry: OrderExpiry, order_lines: list[OrderLine],
-                 order_price: OrderPrice, market_session: MarketSession=MarketSession.REGULAR, client_order_id=None):
+                 order_price: OrderPrice, market_session: MarketSession=MarketSession.REGULAR):
         # This is the Local Order Id.
         self.order_id: str = order_id
         self.expiry: OrderExpiry = expiry
         self.order_lines: list[OrderLine] = order_lines
         self.order_price: OrderPrice = order_price
         self.market_session: MarketSession = market_session
-        if client_order_id:
-            self.client_order_id = client_order_id
 
     def __eq__(self, other):
         if self.order_id != other.order_id:
@@ -35,8 +34,8 @@ class Order:
         for order_line in self.order_lines:
             if order_line not in ols:
                 return False
-        if self.client_order_id:
-            if self.client_order_id != other.client_order_id:
-                return False
 
         return True
+
+    def __copy__(self):
+        return Order(self.order_id, self.expiry, copy.deepcopy(self.order_lines), self.order_price, self.market_session)

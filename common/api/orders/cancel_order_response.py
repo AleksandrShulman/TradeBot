@@ -1,4 +1,4 @@
-from common.api.orders.OrderCancellationMessage import OrderCancellationMessage
+from common.api.orders.order_cancellation_message import OrderCancellationMessage
 from common.api.request import Request
 
 

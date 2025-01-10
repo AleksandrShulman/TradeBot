@@ -1,4 +1,3 @@
-from common.finance.amount import Amount
 from common.finance.price import Price
 from common.finance.tradable import Tradable
 

@@ -1,6 +1,5 @@
 import os
 import pickle
-from symbol import return_stmt
 
 import pytest
 from unittest.mock import MagicMock, patch
@@ -8,10 +7,10 @@ from unittest.mock import MagicMock, patch
 from rauth import OAuth1Session
 
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
-from common.api.orders.place_orders_response import PlaceOrdersResponse
-from common.api.orders.preview_orders_request import PreviewOrdersRequest
-from common.api.orders.preview_orders_response import PreviewOrdersResponse
-from common.api.response import Response
+from common.api.orders.order_metadata import OrderMetadata
+from common.api.orders.place_order_response import PlaceOrderResponse
+from common.api.orders.preview_order_request import PreviewOrderRequest
+from common.api.orders.preview_order_response import PreviewOrderResponse
 from common.api.scripts.preview_place_orders import build_spread_order
 from common.exchange.etrade.etrade_connector import ETradeConnector, DEFAULT_ETRADE_BASE_URL_FILE
 from common.finance.amount import Amount
@@ -29,10 +28,14 @@ from common.order.order_type import OrderType
 # TODO: Adjust this suite to do both XML and JSON inputs ..
 # For some endpoints, I wasn't able to get the JSON input to work
 
+ACCOUNT_ID = "account123"
+
 CLIENT_ORDER_ID = "ABC123"
-SPREAD_ORDER_PREVIEW_ID = 2060570516106
+SPREAD_ORDER_PREVIEW_ID = "2060570516106"
 SPREAD_ORDER_TOTAL_ORDER_VALUE = Amount(247,95, negative=True)
 SPREAD_ORDER_ESTIMATED_COMMISSION = Amount(1,0)
+
+SPREAD_ORDER_METADATA = OrderMetadata(OrderType.SPREADS, ACCOUNT_ID, CLIENT_ORDER_ID)
 
 PLACED_ORDER_ID = 81117
 
@@ -40,20 +43,18 @@ SPREAD_PREVIEW_ORDER_RESPONSE_FILE = os.path.join(os.path.dirname(__file__), "./
 SPREAD_PLACE_ORDER_RESPONSE_FILE = os.path.join(os.path.dirname(__file__), "./resources/output_place_order_spread")
 
 SPREAD_ORDER = build_spread_order()
-SPREAD_ORDER.order_id = PLACED_ORDER_ID
+SPREAD_ORDER.order_id_to_modify = PLACED_ORDER_ID
 
 @pytest.fixture
-def preview_request()->PreviewOrdersRequest:
-
+def preview_request()->PreviewOrderRequest:
     tradable = Equity("GE", "General Electric")
     order_line = OrderLine(tradable, Action.BUY, 3)
     order_price = OrderPrice(OrderPriceType.NET_DEBIT, Amount(100,0,Currency.US_DOLLARS))
+    order = Order(None, GoodForDay(), [order_line], order_price)
 
-    # TODO: The client_order_id should really be part of the preview orders request, since the request will take
-    # multiple orders. However, since it's not being used that way, it can for now live on the order itself.
-    # I actually think idempotency should be better-enforced at the individual order level.
-    order = Order(None, GoodForDay(), [order_line], order_price, client_order_id=CLIENT_ORDER_ID)
-    return PreviewOrdersRequest(OrderType.EQ, "abc123", [order])
+    order_metadata: OrderMetadata = OrderMetadata(OrderType.EQ, ACCOUNT_ID, CLIENT_ORDER_ID)
+
+    return PreviewOrderRequest(order_metadata, order)
 
 @pytest.fixture
 def preview_order_spread_response():
@@ -79,20 +80,18 @@ def order_service(connector):
     return ETradeOrderService(connector)
 
 def test_process_spread_preview_order_response(preview_order_spread_response):
-    response: PreviewOrdersResponse = ETradeOrderService._parse_preview_orders_response(preview_order_spread_response)
-    assert SPREAD_ORDER_PREVIEW_ID == response.order_previews[0].preview_id
-    assert SPREAD_ORDER_TOTAL_ORDER_VALUE == response.order_previews[0].total_order_value
-    assert SPREAD_ORDER_ESTIMATED_COMMISSION == response.order_previews[0].estimated_commission
-
+    response: PreviewOrderResponse = ETradeOrderService._parse_preview_order_response(preview_order_spread_response, SPREAD_ORDER_METADATA)
+    assert SPREAD_ORDER_PREVIEW_ID == str(response.preview_id)
+    assert SPREAD_ORDER_TOTAL_ORDER_VALUE == response.preview_order_info.total_order_value
+    assert SPREAD_ORDER_ESTIMATED_COMMISSION == response.preview_order_info.estimated_commission
 
 def test_process_spread_place_order_response_id_parsed(place_order_spread_response):
-    response: PlaceOrdersResponse = ETradeOrderService._parse_place_orders_response(place_order_spread_response, SPREAD_ORDER.client_order_id)
-    assert PLACED_ORDER_ID == response.order_ids[0]
+    response: PlaceOrderResponse = ETradeOrderService._parse_place_order_response(place_order_spread_response, SPREAD_ORDER_METADATA, SPREAD_ORDER_PREVIEW_ID)
+    assert PLACED_ORDER_ID == response.order_id
 
 def test_process_spread_place_order_response_order_parsed(place_order_spread_response):
-    response: PlaceOrdersResponse = ETradeOrderService._parse_place_orders_response(place_order_spread_response, SPREAD_ORDER.client_order_id)
-    assert SPREAD_ORDER == response.orders[0]
-
+    response: PlaceOrderResponse = ETradeOrderService._parse_place_order_response(place_order_spread_response, SPREAD_ORDER_METADATA, SPREAD_ORDER_PREVIEW_ID)
+    assert SPREAD_ORDER == response.order
 
 def test_preview_spread_order(order_service, preview_request, preview_order_spread_response):
     # Given a mock service
@@ -100,10 +99,10 @@ def test_preview_spread_order(order_service, preview_request, preview_order_spre
     session.post = MagicMock(return_value = preview_order_spread_response)
 
     # Given a Request
-    response: PreviewOrdersResponse = order_service.preview_orders(preview_request)
+    response: PreviewOrderResponse = order_service.preview_order(preview_request)
 
     # Assert output makes sense
-    assert SPREAD_ORDER_PREVIEW_ID == response.order_previews[0].preview_id
+    assert SPREAD_ORDER_PREVIEW_ID == str(response.preview_id)
 
 def test_place_order():
     # Given an order that has been previewed

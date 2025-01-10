@@ -8,6 +8,8 @@ from common.finance.option import Option
 from common.finance.option_type import OptionType
 from common.finance.tradable import Tradable
 from common.order.action import Action
+from common.order.executed_order import ExecutedOrder
+from common.order.executed_order_details import ExecutionOrderDetails
 from common.order.expiry.fill_or_kill import FillOrKill
 from common.order.expiry.good_for_day import GoodForDay
 from common.order.expiry.good_for_sixty_days import GoodForSixtyDays
@@ -18,23 +20,51 @@ from common.order.order import Order
 from common.order.order_line import OrderLine
 from common.order.order_price import OrderPrice
 from common.order.order_price_type import OrderPriceType
+from common.order.order_status import OrderStatus
+from common.order.placed_order import PlacedOrder
+from common.order.placed_order_details import PlacedOrderDetails
 from common.order.tradable_type import TradableType
 
 
 class OrderConversionUtil:
 
     @staticmethod
-    def to_order_from_json(order: dict, order_id: str, client_order_id=None)->Order:
-        expiry: OrderExpiry = OrderConversionUtil.get_expiry_from_order(order)
+    def to_executed_order_from_json(input_order: dict):
+        placed_order: PlacedOrder = OrderConversionUtil.to_placed_order_from_json(input_order)
 
-        order_price_type = OrderPriceType[order["priceType"]]
-        limit_price: OrderPrice = OrderPrice(order_price_type, Amount.from_float(order["limitPrice"]))
-        market_session = MarketSession[order["marketSession"]]
+        order_detail = input_order["OrderDetail"][0]
+        execution_order_details: ExecutionOrderDetails = ExecutionOrderDetails(
+        Amount.from_float(order_detail["orderValue"]), datetime.fromtimestamp(order_detail["executedTime"] / 1000))
 
-        order_lines: list[OrderLine] = OrderConversionUtil.process_instrument_to_orderlines(order)
+        return ExecutedOrder(placed_order, execution_order_details)
 
-        order: Order = Order(order_id, expiry, order_lines, limit_price, market_session, client_order_id)
-        return order
+    @staticmethod
+    def to_placed_order_from_json(input_order: dict)->PlacedOrder:
+        order_id = input_order["orderId"]
+        order_detail = input_order["OrderDetail"][0]
+        account_id = order_detail["accountId"]
+        order: Order = OrderConversionUtil.to_order_from_json(input_order)
+
+        status: OrderStatus = OrderStatus[str(order_detail['status']).upper()]
+        order_placed_time: datetime = datetime.fromtimestamp(order_detail["placedTime"] / 1000)
+        replaces_order_id = order_detail['replacesOrderId'] if 'replacesOrderId' in order_detail else None
+
+        placed_order_details = PlacedOrderDetails(account_id, order_id, status, order_placed_time, replaces_order_id)
+
+        return PlacedOrder(order, placed_order_details)
+
+    @staticmethod
+    def to_order_from_json(input_order: dict)->Order:
+        expiry: OrderExpiry = OrderConversionUtil.get_expiry_from_order(input_order)
+
+        order_price_type = OrderPriceType[input_order["priceType"]]
+        limit_price: OrderPrice = OrderPrice(order_price_type, Amount.from_float(input_order["limitPrice"]))
+        market_session = MarketSession[input_order["marketSession"]]
+
+        order_lines: list[OrderLine] = OrderConversionUtil.process_instrument_to_orderlines(input_order)
+
+        input_order: Order = Order(None, expiry, order_lines, limit_price, market_session)
+        return input_order
 
     @staticmethod
     def process_instrument_to_orderlines(order: dict)->list[OrderLine]:

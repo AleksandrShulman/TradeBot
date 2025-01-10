@@ -1,4 +1,4 @@
-from common.api.orders.OrderPlacementMessage import OrderPlacementMessage
+from common.api.orders.order_placement_message import OrderPlacementMessage
 
 
 class ETradeOrderResponseMessage(OrderPlacementMessage):
