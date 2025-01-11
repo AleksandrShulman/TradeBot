@@ -6,6 +6,7 @@ from common.finance.equity import Equity
 from common.finance.exercise_style import ExerciseStyle
 from common.finance.option_type import OptionType
 from common.finance.tradable import Tradable
+from common.order.tradable_type import TradableType
 from common.utils.local_ticker_lookup import LocalTickerLookup
 
 from dateutil.parser import parse
@@ -26,6 +27,9 @@ class Option(Tradable):
 
     def copy_of(self):
         return Option(self.equity, self.type, self.strike, self.expiry, self.style)
+
+    def get_type(self) -> TradableType:
+        return TradableType.Option
 
     def __hash__(self):
         return hash((self.equity, self.type, self.strike, self.expiry, self.style))

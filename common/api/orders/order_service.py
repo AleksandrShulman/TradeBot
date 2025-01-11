@@ -41,3 +41,6 @@ class OrderService(ABC):
 
     def place_order(self, place_order_request: PlaceOrderRequest) -> PlaceOrderResponse:
         pass
+
+    def preview_and_place_order(self, preview_order_request: PreviewOrderRequest):
+        pass

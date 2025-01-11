@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from common.exchange.market_session import MarketSession
 from common.finance.amount import Amount
@@ -39,11 +39,11 @@ class OrderConversionUtil:
         return ExecutedOrder(placed_order, execution_order_details)
 
     @staticmethod
-    def to_placed_order_from_json(input_order: dict)->PlacedOrder:
-        order_id = input_order["orderId"]
+    def to_placed_order_from_json(input_order: dict, query_account_id = None, query_order_id: str = None)->PlacedOrder:
+        order_id = input_order["orderId"] if "orderId" in input_order else query_order_id
         order_detail = input_order["OrderDetail"][0]
-        account_id = order_detail["accountId"]
-        order: Order = OrderConversionUtil.to_order_from_json(input_order)
+        account_id = order_detail["accountId"] if "accountId" in order_detail else query_account_id
+        order: Order = OrderConversionUtil.to_order_from_json(order_detail)
 
         status: OrderStatus = OrderStatus[str(order_detail['status']).upper()]
         order_placed_time: datetime = datetime.fromtimestamp(order_detail["placedTime"] / 1000)
@@ -70,7 +70,7 @@ class OrderConversionUtil:
     def process_instrument_to_orderlines(order: dict)->list[OrderLine]:
         order_lines: list[OrderLine] = list[OrderLine]()
         for instrument in order["Instrument"]:
-            quantity = instrument['quantity']
+            quantity = instrument['orderedQuantity'] if 'orderedQuantity' in instrument else instrument['quantity']
             filled_quantity: int = instrument["filledQuantity"] if "filledQuantity" in instrument else 0
             order_action = Action[instrument['orderAction']]
             product = instrument["Product"]
@@ -87,7 +87,7 @@ class OrderConversionUtil:
                 expiry_day = product['expiryDay']
                 strike_price = Amount.from_float(product['strikePrice'])
 
-                option_expiry = datetime.datetime(expiry_year, expiry_month, expiry_day).date()
+                option_expiry = datetime(expiry_year, expiry_month, expiry_day).date()
 
                 o: Option = Option(equity, call_put, strike_price, option_expiry, ExerciseStyle.from_ticker(symbol))
                 order_lines.append(OrderLine(o, order_action, quantity, filled_quantity))
@@ -106,7 +106,7 @@ class OrderConversionUtil:
         order_term = json["orderTerm"]
         if order_term == "GOOD_FOR_DAY":
             return GoodForDay()
-        if order_term == "GOOD_TILL_CANCELLED":
+        if order_term == "GOOD_TILL_CANCELLED" or order_term == "GOOD_UNTIL_CANCEL":
             return GoodUntilCancelled(all_or_none)
         if order_term == "GOOD_TILL_DATE":
             # TODO: It's not clear where we get the value for GoodUntilDate

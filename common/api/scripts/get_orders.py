@@ -5,11 +5,18 @@ from datetime import datetime
 import pytest
 
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
+from common.api.orders.get_order_request import GetOrderRequest
+from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_request import OrderListRequest
+from common.api.orders.order_metadata import OrderMetadata
 from common.api.orders.order_service import OrderService
+from common.api.orders.place_order_response import PlaceOrderResponse
+from common.api.orders.preview_order_request import PreviewOrderRequest
+from common.api.test.orders.order_test_util import OrderTestUtil
 from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.order.executed_order import ExecutedOrder
 from common.order.order_status import OrderStatus
+from common.order.placed_order import PlacedOrder
 
 """
 NOTE - To test in real life, it's necessary to include an `integration_test_properties.ini` file.
@@ -31,6 +38,7 @@ config = configparser.ConfigParser()
 
 @pytest.fixture
 def account_key():
+    config.read(CONFIG_FILE)
     return config['ETRADE'][ACCOUNT_ID_KEY]
 
 @pytest.fixture
@@ -39,6 +47,15 @@ def order_service():
     connector: ETradeConnector = ETradeConnector()
     o: OrderService = ETradeOrderService(connector)
     return o
+
+@pytest.fixture()
+def spread_order(order_service, account_key)-> (str, PlacedOrder):
+    order = OrderTestUtil.build_spread_order()
+    order_metadata: OrderMetadata = OrderMetadata(order.get_order_type(), account_key, OrderTestUtil.generate_random_client_order_id())
+    req: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
+    res: PlaceOrderResponse = order_service.preview_and_place_order(req)
+    return res.order_id, res.order
+
 
 def test_get_date_range_orders_within_range(order_service: OrderService, account_key: str):
     start_date = JAN_1_2024
@@ -61,6 +78,12 @@ def test_get_all_orders(order_service: OrderService, account_key: str):
     list_order_request = OrderListRequest(account_key, OrderStatus.ANY, JAN_1_2024, TODAY, 50)
     orders = order_service.list_orders(list_order_request, dict())
     assert len(orders.order_list) == 50
+
+def test_get_specific_order(order_service, account_key, spread_order):
+    order_id, order = spread_order
+    req: GetOrderRequest = GetOrderRequest(account_key, order_id)
+    res: GetOrderResponse = order_service.get_order(req)
+    assert str(res.placed_order.placed_order_details.exchange_order_id) == str(order_id)
 
 if __name__ == "__main__":
     pytest.main()

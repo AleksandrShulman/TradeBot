@@ -1,6 +1,4 @@
 from common.api.request import Request
-from common.order.order import Order
-from common.order.order_type import OrderType
 
 
 class CancelOrderRequest(Request):

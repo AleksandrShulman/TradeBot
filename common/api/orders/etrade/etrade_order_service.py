@@ -9,7 +9,6 @@ from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_request import OrderListRequest
 from common.api.orders.order_list_response import OrderListResponse
 from common.api.orders.order_metadata import OrderMetadata
-from common.api.orders.order_modification_preview import OrderModificationPreview
 from common.api.orders.order_preview import OrderPreview
 from common.api.orders.order_service import OrderService
 from common.api.orders.place_modify_order_request import PlaceModifyOrderRequest
@@ -53,11 +52,21 @@ class ETradeOrderService(OrderService):
         url = self.base_url + path
         response = self.session.get(url, params=params)
 
-        parsed_order_list: list[Order] = ETradeOrderService._parse_order_list_response(response)
+        parsed_order_list: list[Order] = ETradeOrderService._parse_order_list_response(response, account_id)
         return OrderListResponse(parsed_order_list)
 
     def get_order(self, get_order_request: GetOrderRequest) -> GetOrderResponse:
-        pass
+        account_id = get_order_request.account_id
+        order_id = get_order_request.order_id
+        path = f"/v1/accounts/{account_id}/orders/{order_id}.json"
+
+        params = dict()
+        params["status"] = "OPEN"
+
+        url = self.base_url + path
+        response = self.session.get(url, params=params)
+
+        return ETradeOrderService._parse_get_order_response(response, account_id, order_id)
 
     def cancel_order(self, cancel_order_request: CancelOrderRequest) -> CancelOrderResponse:
         account_id = cancel_order_request.account_id
@@ -183,6 +192,15 @@ class ETradeOrderService(OrderService):
         response = self.session.post(url, header_auth=True, headers=headers, data=payload)
         return ETradeOrderService._parse_place_order_response(response, order_metadata, preview_id)
 
+    def preview_and_place_order(self, preview_order_request: PreviewOrderRequest) -> PlaceOrderResponse:
+        order_metadata = preview_order_request.order_metadata
+        preview_order_response: PreviewOrderResponse = self.preview_order(preview_order_request)
+        preview_id = preview_order_response.preview_id
+        place_order_request: PlaceOrderRequest = PlaceOrderRequest(order_metadata, preview_id, preview_order_request.order)
+        place_order_response: PlaceOrderResponse = self.place_order(place_order_request)
+
+        return place_order_response
+
     @staticmethod
     def _parse_place_order_response(response, order_metadata: OrderMetadata, preview_id: str, previous_order_id=None)-> PlaceOrderResponse:
         data = json.loads(response.text)
@@ -244,7 +262,7 @@ class ETradeOrderService(OrderService):
             return PreviewOrderResponse(order_metadata, preview_id, order_preview)
 
     @staticmethod
-    def _parse_order_list_response(response) -> list[PlacedOrder]:
+    def _parse_order_list_response(response, account_id) -> list[PlacedOrder]:
         if response.status_code == '204':
             return list[PlacedOrder]()
 
@@ -259,16 +277,33 @@ class ETradeOrderService(OrderService):
         for order in orders:
             order_detail = order["OrderDetail"][0]
             status: OrderStatus = OrderStatus[str(order_detail['status']).upper()]
+            order_id = order["orderId"]
 
-            placed_order: PlacedOrder = OrderConversionUtil.to_placed_order_from_json(order)
+            placed_order: PlacedOrder = OrderConversionUtil.to_placed_order_from_json(order, account_id, order_id)
 
             if status == OrderStatus.EXECUTED:
-                executed_order = OrderConversionUtil.to_executed_order_from_json(order, placed_order)
+                executed_order = OrderConversionUtil.to_executed_order_from_json(order)
                 return_order_list.append(executed_order)
             else:
                 return_order_list.append(placed_order)
 
         return return_order_list
+
+    @staticmethod
+    def _parse_get_order_response(response, account_id, order_id) -> GetOrderResponse:
+        data = response.json()
+        print(data)
+
+        orders_response = data["OrdersResponse"]
+        order = orders_response['Order'][0]
+
+        placed_order: PlacedOrder = OrderConversionUtil.to_placed_order_from_json(order, account_id, order_id)
+
+        if order["OrderDetail"][0]["status"] == OrderStatus.EXECUTED:
+            executed_order = OrderConversionUtil.to_executed_order_from_json(order)
+            return GetOrderResponse(executed_order)
+        else:
+            return GetOrderResponse(placed_order)
 
     @staticmethod
     def _build_preview_order_xml(order, order_type: OrderType, client_order_id: str)->str:
