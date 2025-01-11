@@ -48,5 +48,23 @@ class OrderTestUtil:
         return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
 
     @staticmethod
+    def build_covered_call():
+        order_lines: list[OrderLine] = list()
+
+        equity = Equity("GE", "General Electric")
+        option_expiry: datetime.date = datetime(2025, 1, 31).date()
+        tradable1: Option = Option(equity, OptionType.CALL, Amount(175, 0, Currency.US_DOLLARS), option_expiry)
+
+        ol_1 = OrderLine(equity, Action.BUY, 100)
+        ol_2 = OrderLine(tradable1, Action.SELL_OPEN, 1)
+
+        order_price: OrderPrice = OrderPrice(OrderPriceType.NET_DEBIT, Amount(160, 69))
+
+        order_lines.append(ol_1)
+        order_lines.append(ol_2)
+
+        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+
+    @staticmethod
     def generate_random_client_order_id():
         return "".join(choices(string.ascii_uppercase + string.digits, k=15))
