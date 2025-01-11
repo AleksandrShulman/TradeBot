@@ -3,8 +3,6 @@ import os
 
 import pytest
 
-from common.api.orders.cancel_order_request import CancelOrderRequest
-from common.api.orders.cancel_order_response import CancelOrderResponse
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.order_metadata import OrderMetadata
@@ -36,13 +34,12 @@ def order_service():
 
 
 def test_submit_orders(order_service: OrderService, account_id: str):
-    order = OrderTestUtil.build_covered_call()
+    order = OrderTestUtil.build_three_option_put_one_spread_one_naked()
 
     order_type: OrderType = order.get_order_type()
 
     client_order_id = OrderTestUtil.generate_random_client_order_id()
     order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, client_order_id)
-
 
     preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
     preview_order_response: PreviewOrderResponse = order_service.preview_order(preview_order_request)
@@ -54,4 +51,4 @@ def test_submit_orders(order_service: OrderService, account_id: str):
     order_id = place_order_response.order_id
 
     response = order_service.get_order(GetOrderRequest(account_id, order_id))
-    print(response.placed_order.order)
+    print(response.placed_order.order.order_id)

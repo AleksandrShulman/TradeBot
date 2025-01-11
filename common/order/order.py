@@ -66,6 +66,11 @@ class Order:
 
         # TODO: Be clever here, maybe. Otherwise, just enumerate the types
         option_types : list[(OptionType, Action)] = [(option[0], option[1]) for option in options]
+        num_puts = sum(1 for option in option_types if option[0] == OptionType.PUT)
+        num_calls = sum(1 for option in option_types if option[0] == OptionType.CALL)
+
+
+
         return OrderType.SPREADS
 
     def __copy__(self):

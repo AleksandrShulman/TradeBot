@@ -72,7 +72,7 @@ def test_get_date_range_orders_within_range(order_service: OrderService, account
 def test_get_open_orders(order_service: OrderService, account_key: str):
     list_order_request = OrderListRequest(account_key, OrderStatus.OPEN, JAN_1_2024, TODAY, 50)
     orders = order_service.list_orders(list_order_request, dict())
-    assert orders.order_list[0].status == OrderStatus.OPEN
+    assert orders.order_list[0].placed_order_details.status == OrderStatus.OPEN
 
 def test_get_all_orders(order_service: OrderService, account_key: str):
     list_order_request = OrderListRequest(account_key, OrderStatus.ANY, JAN_1_2024, TODAY, 50)
@@ -84,6 +84,15 @@ def test_get_specific_order(order_service, account_key, spread_order):
     req: GetOrderRequest = GetOrderRequest(account_key, order_id)
     res: GetOrderResponse = order_service.get_order(req)
     assert str(res.placed_order.placed_order_details.exchange_order_id) == str(order_id)
+
+
+def test_get_specific_order_by_id(order_service, account_key):
+    order_id = str(81292)
+    req: GetOrderRequest = GetOrderRequest(account_key, order_id)
+    res: GetOrderResponse = order_service.get_order(req)
+    assert str(res.placed_order.placed_order_details.exchange_order_id) == str(order_id)
+
+
 
 if __name__ == "__main__":
     pytest.main()

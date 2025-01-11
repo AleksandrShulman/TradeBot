@@ -51,14 +51,94 @@ class OrderTestUtil:
     def build_covered_call():
         order_lines: list[OrderLine] = list()
 
-        equity = Equity("GE", "General Electric")
+        equity = Equity("SFIX", "STITCH FIX INC COM CL A")
         option_expiry: datetime.date = datetime(2025, 1, 31).date()
-        tradable1: Option = Option(equity, OptionType.CALL, Amount(175, 0, Currency.US_DOLLARS), option_expiry)
+        tradable1: Option = Option(equity, OptionType.CALL, Amount(4, 0, Currency.US_DOLLARS), option_expiry)
 
         ol_1 = OrderLine(equity, Action.BUY, 100)
         ol_2 = OrderLine(tradable1, Action.SELL_OPEN, 1)
 
-        order_price: OrderPrice = OrderPrice(OrderPriceType.NET_DEBIT, Amount(160, 69))
+        order_price: OrderPrice = OrderPrice(OrderPriceType.NET_DEBIT, Amount(3, 84))
+
+        order_lines.append(ol_1)
+        order_lines.append(ol_2)
+
+        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+
+    @staticmethod
+    def build_calendar_spread():
+        order_lines: list[OrderLine] = list()
+
+        equity = Equity("SFIX", "STITCH FIX INC COM CL A")
+        option_expiry_1: datetime.date = datetime(2025, 1, 31).date()
+        option_expiry_2: datetime.date = datetime(2025, 6, 20).date()
+        tradable1: Option = Option(equity, OptionType.CALL, Amount(4, 0, Currency.US_DOLLARS), option_expiry_1)
+        tradable2: Option = Option(equity, OptionType.CALL, Amount(4, 0, Currency.US_DOLLARS), option_expiry_2)
+
+        ol_1 = OrderLine(tradable1, Action.SELL_OPEN, 1)
+        ol_2 = OrderLine(tradable2, Action.BUY_OPEN, 1)
+
+        order_price: OrderPrice = OrderPrice(OrderPriceType.NET_DEBIT, Amount(0, 45))
+
+        order_lines.append(ol_1)
+        order_lines.append(ol_2)
+
+        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+
+    @staticmethod
+    def build_three_option_put_one_spread_one_naked():
+        order_lines: list[OrderLine] = list()
+
+        equity = Equity("SFIX", "STITCH FIX INC COM CL A")
+        option_expiry_1: datetime.date = datetime(2025, 1, 31).date()
+        tradable1: Option = Option(equity, OptionType.CALL, Amount(5, 0, Currency.US_DOLLARS), option_expiry_1)
+        tradable2: Option = Option(equity, OptionType.CALL, Amount(3, 0, Currency.US_DOLLARS), option_expiry_1)
+
+        ol_1 = OrderLine(tradable1, Action.SELL_OPEN, 2)
+        ol_2 = OrderLine(tradable2, Action.BUY_OPEN, 1)
+
+        order_price: OrderPrice = OrderPrice(OrderPriceType.NET_DEBIT, Amount(0, 45))
+
+        order_lines.append(ol_1)
+        order_lines.append(ol_2)
+
+        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+
+    @staticmethod
+    def build_diagonal_spread():
+        order_lines: list[OrderLine] = list()
+
+        equity = Equity("SFIX", "STITCH FIX INC COM CL A")
+        option_expiry_1: datetime.date = datetime(2025, 1, 31).date()
+        option_expiry_2: datetime.date = datetime(2025, 6, 20).date()
+        tradable1: Option = Option(equity, OptionType.CALL, Amount(4, 0, Currency.US_DOLLARS), option_expiry_1)
+        tradable2: Option = Option(equity, OptionType.CALL, Amount(5, 0, Currency.US_DOLLARS), option_expiry_2)
+
+        ol_1 = OrderLine(tradable1, Action.SELL_OPEN, 1)
+        ol_2 = OrderLine(tradable2, Action.BUY_OPEN, 1)
+
+        order_price: OrderPrice = OrderPrice(OrderPriceType.NET_DEBIT, Amount(0, 45))
+
+        order_lines.append(ol_1)
+        order_lines.append(ol_2)
+
+        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+
+
+    @staticmethod
+    def build_horizontal_spread():
+        order_lines: list[OrderLine] = list()
+
+        equity = Equity("SFIX", "STITCH FIX INC COM CL A")
+        option_expiry: datetime.date = datetime(2025, 1, 31).date()
+        tradable1: Option = Option(equity, OptionType.CALL, Amount(4, 0, Currency.US_DOLLARS), option_expiry)
+        tradable2: Option = Option(equity, OptionType.CALL, Amount(5, 0, Currency.US_DOLLARS), option_expiry)
+
+
+        ol_1 = OrderLine(tradable1, Action.SELL_OPEN, 1)
+        ol_2 = OrderLine(tradable2, Action.BUY_OPEN, 1)
+
+        order_price: OrderPrice = OrderPrice(OrderPriceType.NET_CREDIT, Amount(0, 45))
 
         order_lines.append(ol_1)
         order_lines.append(ol_2)
