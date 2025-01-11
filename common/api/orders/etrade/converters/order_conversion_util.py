@@ -48,8 +48,9 @@ class OrderConversionUtil:
         status: OrderStatus = OrderStatus[str(order_detail['status']).upper()]
         order_placed_time: datetime = datetime.fromtimestamp(order_detail["placedTime"] / 1000)
         replaces_order_id = order_detail['replacesOrderId'] if 'replacesOrderId' in order_detail else None
+        market_session = MarketSession[input_order["marketSession"]]
 
-        placed_order_details = PlacedOrderDetails(account_id, order_id, status, order_placed_time, replaces_order_id)
+        placed_order_details = PlacedOrderDetails(account_id, order_id, status, order_placed_time, market_session, replaces_order_id)
 
         return PlacedOrder(order, placed_order_details)
 
@@ -59,11 +60,10 @@ class OrderConversionUtil:
 
         order_price_type = OrderPriceType[input_order["priceType"]]
         limit_price: OrderPrice = OrderPrice(order_price_type, Amount.from_float(input_order["limitPrice"]))
-        market_session = MarketSession[input_order["marketSession"]]
 
         order_lines: list[OrderLine] = OrderConversionUtil.process_instrument_to_orderlines(input_order)
 
-        input_order: Order = Order(None, expiry, order_lines, limit_price, market_session)
+        input_order: Order = Order(None, expiry, order_lines, limit_price)
         return input_order
 
     @staticmethod

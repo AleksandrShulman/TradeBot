@@ -2,7 +2,6 @@ import string
 from datetime import datetime
 from random import choices
 
-from common.exchange.market_session import MarketSession
 from common.finance.amount import Amount
 from common.finance.currency import Currency
 from common.finance.equity import Equity
@@ -25,7 +24,7 @@ class OrderTestUtil:
         order_price: OrderPrice = OrderPrice(OrderPriceType.LIMIT, Amount(100, 0))
         order_lines: list[OrderLine] = [ol_1]
 
-        order = Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+        order = Order(None, GoodForDay(), order_lines, order_price)
         return order
 
     @staticmethod
@@ -45,7 +44,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+        return Order(None, GoodForDay(), order_lines, order_price)
 
     @staticmethod
     def build_covered_call():
@@ -63,7 +62,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+        return Order(None, GoodForDay(), order_lines, order_price)
 
     @staticmethod
     def build_calendar_spread():
@@ -83,7 +82,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+        return Order(None, GoodForDay(), order_lines, order_price)
 
     @staticmethod
     def build_three_option_put_one_spread_one_naked():
@@ -102,7 +101,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+        return Order(None, GoodForDay(), order_lines, order_price)
 
     @staticmethod
     def build_diagonal_spread():
@@ -122,7 +121,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+        return Order(None, GoodForDay(), order_lines, order_price)
 
 
     @staticmethod
@@ -143,7 +142,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price, MarketSession.REGULAR)
+        return Order(None, GoodForDay(), order_lines, order_price)
 
     @staticmethod
     def generate_random_client_order_id():
