@@ -11,7 +11,7 @@ from common.api.orders.order_metadata import OrderMetadata
 from common.api.orders.place_order_response import PlaceOrderResponse
 from common.api.orders.preview_order_request import PreviewOrderRequest
 from common.api.orders.preview_order_response import PreviewOrderResponse
-from common.api.scripts.preview_place_orders import build_spread_order
+from common.api.test.orders.order_test_util import OrderTestUtil
 from common.exchange.etrade.etrade_connector import ETradeConnector, DEFAULT_ETRADE_BASE_URL_FILE
 from common.finance.amount import Amount
 from common.finance.currency import Currency
@@ -42,7 +42,7 @@ PLACED_ORDER_ID = 81117
 SPREAD_PREVIEW_ORDER_RESPONSE_FILE = os.path.join(os.path.dirname(__file__), "./resources/output_preview_order_spread")
 SPREAD_PLACE_ORDER_RESPONSE_FILE = os.path.join(os.path.dirname(__file__), "./resources/output_place_order_spread")
 
-SPREAD_ORDER = build_spread_order()
+SPREAD_ORDER = OrderTestUtil.build_spread_order()
 SPREAD_ORDER.order_id_to_modify = PLACED_ORDER_ID
 
 @pytest.fixture

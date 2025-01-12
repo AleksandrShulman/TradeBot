@@ -135,7 +135,7 @@ class OrderConversionUtil:
                                <allOrNone>{order.expiry.all_or_none}</allOrNone>
                                <priceType>{order.order_price.order_price_type.name}</priceType>
                                <orderTerm>{order_term}</orderTerm>
-                               <marketSession>{order.market_session.name}</marketSession>
+                               <marketSession>REGULAR</marketSession>
                                <stopPrice />
                                <limitPrice>{order.order_price.price}</limitPrice>
                                {instrument_xml}
