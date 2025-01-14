@@ -87,7 +87,7 @@ def test_get_specific_order(order_service, account_key, spread_order):
 
 
 def test_get_specific_order_by_id(order_service, account_key):
-    order_id = str(81292)
+    order_id = str(81306)
     req: GetOrderRequest = GetOrderRequest(account_key, order_id)
     res: GetOrderResponse = order_service.get_order(req)
     assert str(res.placed_order.placed_order_details.exchange_order_id) == str(order_id)

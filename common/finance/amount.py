@@ -94,7 +94,13 @@ class Amount:
         return self.whole + self.part / 100.0
 
     def __str__(self):
-        return f"{self.whole}.{self.part}"
+        if self.negative:
+            return f"-{self.whole}.{self.part}"
+        else:
+            return f"{self.whole}.{self.part}"
+
+    def __repr__(self):
+        return self.__str__()
 
     def __le__(self, other):
         nominal: int = self.whole * 100 + self.part
@@ -110,7 +116,7 @@ class Amount:
         return not self.__le__(other)
 
     def __eq__(self, other):
-        if other.currency != self.currency:
+        if other.currency and self.currency and other.currency != self.currency:
             return False
 
         if other.whole != self.whole:

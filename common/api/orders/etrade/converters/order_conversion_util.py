@@ -48,7 +48,8 @@ class OrderConversionUtil:
         status: OrderStatus = OrderStatus[str(order_detail['status']).upper()]
         order_placed_time: datetime = datetime.fromtimestamp(order_detail["placedTime"] / 1000)
         replaces_order_id = order_detail['replacesOrderId'] if 'replacesOrderId' in order_detail else None
-        market_session = MarketSession[input_order["marketSession"]]
+        market_session = MarketSession[order_detail["marketSession"]]
+        ratio = order_detail['ratio'] if 'ratio' in order_detail else None
 
         placed_order_details = PlacedOrderDetails(account_id, order_id, status, order_placed_time, market_session, replaces_order_id)
 

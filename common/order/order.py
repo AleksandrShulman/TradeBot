@@ -10,6 +10,7 @@ from common.order.order_type import OrderType
 from common.order.tradable_type import TradableType
 
 
+# TODO: Add ratio
 class Order:
     def __init__(self, order_id: str, expiry: OrderExpiry, order_lines: list[OrderLine],
                  order_price: OrderPrice):

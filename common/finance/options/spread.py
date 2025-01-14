@@ -8,6 +8,7 @@ from common.order.order_price import OrderPrice
 from common.order.order_price_type import OrderPriceType
 from common.order.order_type import OrderType
 
+DE_NORMALIZATION_CONSTANT = 100
 
 class Spread(OptionOrder):
     def __init__(self, order_price: OrderPrice, options: list[OptionOrderLine]):
@@ -38,39 +39,39 @@ class Spread(OptionOrder):
             raise Exception(f"A spread needs to be against the same underlying.")
 
     def get_collateral_required(self) -> Amount:
-        short_long: (Option, Option) = (self.o_1.tradable, self.o_2.tradable) if Action.is_short(self.action_1) else (self.o_2, self.o_1)
+        short_long: (Option, Option) = (self.o_1.tradable, self.o_2.tradable) if Action.is_short(self.action_1) else (self.o_2.tradable, self.o_1.tradable)
         short_option, long_option = short_long
 
         short_strike = short_option.strike
         long_strike = long_option.strike
 
-        order_credit_debit: Amount = self.order_price.price * -1 if self.order_price.order_price_type == OrderPriceType.NET_CREDIT else self.order_price.price
+        order_credit_debit: Amount = self.order_price.price * -1 if self.order_price.order_price_type == OrderPriceType.NET_DEBIT else self.order_price.price
         if short_option.expiry > long_option.expiry:
             # This is a naked situation
             if self.spread_option_type == OptionType.PUT:
                 # Credit positive, debit negative
-                short_option.strike - order_credit_debit
+                return (short_option.strike - order_credit_debit) * DE_NORMALIZATION_CONSTANT
             else:
-                short_option.strike * NAKED_CALL_REQUIRED_COLLATERAL_MULTIPLIER - order_credit_debit
+                return (short_option.strike * NAKED_CALL_REQUIRED_COLLATERAL_MULTIPLIER - order_credit_debit) * DE_NORMALIZATION_CONSTANT
         else:
             if self.spread_option_type == OptionType.PUT:
-                if short_option.strike > long_option:
+                if short_strike > long_strike:
                     # classic cash-secured put spread
-                    return Amount.from_float(short_strike - long_strike) * 100 - order_credit_debit
+                    return (Amount.from_float(short_strike - long_strike) - order_credit_debit)*DE_NORMALIZATION_CONSTANT
                 else:
                     # The assumption is that it must be debit
                     if self.order_price.order_price_type != OrderPriceType.NET_DEBIT:
                         raise Exception(f"Implausible configuration to take a net credit with short option {short_option} and long option {long_option}")
-                    return self.order_price.price
+                    return self.order_price.price * DE_NORMALIZATION_CONSTANT
             else:
-                if short_option.strike < long_option:
+                if short_strike < long_strike:
                     # classic cash-secured put spread
-                    return Amount.from_float(long_strike - short_strike) * 100 - order_credit_debit
+                    return (long_strike - short_strike - order_credit_debit) * DE_NORMALIZATION_CONSTANT
                 else:
                     # The assumption is that it must be debit
                     if self.order_price.order_price_type != OrderPriceType.NET_DEBIT:
                         raise Exception(f"Implausible configuration to take a net credit with short option {short_option} and long option {long_option}")
-                    return self.order_price.price
+                    return self.order_price.price * DE_NORMALIZATION_CONSTANT
 
 
     def get_order_type(self):

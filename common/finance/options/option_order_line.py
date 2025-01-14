@@ -1,10 +1,8 @@
 from typing import Callable
 
-from common.finance.amount import Amount
 from common.finance.option import Option
 from common.order.action import Action
 from common.order.order_line import OrderLine
-from common.order.order_type import OrderType
 
 
 class OptionOrderLine(OrderLine):
