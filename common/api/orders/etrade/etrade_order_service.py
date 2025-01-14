@@ -6,8 +6,8 @@ from common.api.orders.etrade.converters.order_conversion_util import OrderConve
 from common.api.orders.etrade.etrade_order_response_message import ETradeOrderResponseMessage
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
-from common.api.orders.order_list_request import OrderListRequest
-from common.api.orders.order_list_response import OrderListResponse
+from common.api.orders.order_list_request import ListOrdersRequest
+from common.api.orders.order_list_response import ListOrdersResponse
 from common.api.orders.order_metadata import OrderMetadata
 from common.api.orders.order_preview import OrderPreview
 from common.api.orders.order_service import OrderService
@@ -32,7 +32,7 @@ class ETradeOrderService(OrderService):
         super().__init__(connector)
         self.session, self.base_url = self.connector.load_connection()
 
-    def list_orders(self, list_orders_request: OrderListRequest, exchange_specific_opts: dict[str, str]) -> OrderListResponse:
+    def list_orders(self, list_orders_request: ListOrdersRequest, exchange_specific_opts: dict[str, str]) -> ListOrdersResponse:
         account_id = list_orders_request.account_id
         path = f"/v1/accounts/{account_id}/orders.json"
         count = list_orders_request.count
@@ -53,7 +53,7 @@ class ETradeOrderService(OrderService):
         response = self.session.get(url, params=params)
 
         parsed_order_list: list[Order] = ETradeOrderService._parse_order_list_response(response, account_id)
-        return OrderListResponse(parsed_order_list)
+        return ListOrdersResponse(parsed_order_list)
 
     def get_order(self, get_order_request: GetOrderRequest) -> GetOrderResponse:
         account_id = get_order_request.account_id

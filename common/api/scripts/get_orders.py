@@ -7,7 +7,7 @@ import pytest
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
-from common.api.orders.order_list_request import OrderListRequest
+from common.api.orders.order_list_request import ListOrdersRequest
 from common.api.orders.order_metadata import OrderMetadata
 from common.api.orders.order_service import OrderService
 from common.api.orders.place_order_response import PlaceOrderResponse
@@ -61,7 +61,7 @@ def test_get_date_range_orders_within_range(order_service: OrderService, account
     start_date = JAN_1_2024
     end_date = JAN_2_2024
 
-    list_order_request = OrderListRequest(account_key, OrderStatus.ANY, start_date, end_date, 50)
+    list_order_request = ListOrdersRequest(account_key, OrderStatus.ANY, start_date, end_date, 50)
     orders = order_service.list_orders(list_order_request, dict())
 
     for order in orders.order_list:
@@ -70,12 +70,12 @@ def test_get_date_range_orders_within_range(order_service: OrderService, account
         assert start_date <= order.order_placed_time.date() <= end_date
 
 def test_get_open_orders(order_service: OrderService, account_key: str):
-    list_order_request = OrderListRequest(account_key, OrderStatus.OPEN, JAN_1_2024, TODAY, 50)
+    list_order_request = ListOrdersRequest(account_key, OrderStatus.OPEN, JAN_1_2024, TODAY, 50)
     orders = order_service.list_orders(list_order_request, dict())
     assert orders.order_list[0].placed_order_details.status == OrderStatus.OPEN
 
 def test_get_all_orders(order_service: OrderService, account_key: str):
-    list_order_request = OrderListRequest(account_key, OrderStatus.ANY, JAN_1_2024, TODAY, 50)
+    list_order_request = ListOrdersRequest(account_key, OrderStatus.ANY, JAN_1_2024, TODAY, 50)
     orders = order_service.list_orders(list_order_request, dict())
     assert len(orders.order_list) == 50
 

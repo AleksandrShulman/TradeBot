@@ -7,7 +7,10 @@ from common.finance.currency import Currency
 from common.finance.equity import Equity
 from common.finance.option import Option
 from common.finance.option_type import OptionType
+from common.finance.options.equity_order_line import EquityOrderLine
 from common.finance.options.mixed.buy_write import BuyWrite
+from common.finance.options.option_order import OptionOrder
+from common.finance.options.option_order_line import OptionOrderLine
 from common.finance.options.spread import Spread, DE_NORMALIZATION_CONSTANT
 from common.order.action import Action
 from common.order.order_line import OrderLine
@@ -23,12 +26,11 @@ class TestSpread:
         option_expiry: datetime.date = datetime(2025, 1, 31).date()
         tradable1: Option = Option(equity, OptionType.CALL, Amount(4, 0, Currency.US_DOLLARS), option_expiry)
 
-        ol_1 = OrderLine(equity, Action.BUY, 100)
-        ol_2 = OrderLine(tradable1, Action.SELL_OPEN, 1)
+        ol_1 = EquityOrderLine(equity, Action.BUY, 100)
+        ol_2 = OptionOrderLine(tradable1, Action.SELL_OPEN, 1)
 
         order_price: OrderPrice = OrderPrice(OrderPriceType.NET_CREDIT, Amount(0, 44))
 
-        equity_order_line: OrderLine = ol_1
         option_order_lines: list[OrderLine] = list[OrderLine]()
 
         option_order_lines.append(ol_2)

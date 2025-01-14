@@ -25,6 +25,12 @@ class OptionOrder(OrderAnalysis):
     def get_order_type(self) -> OrderType:
         pass
 
+    """
+    TODO: Build a Collateral Calculation Engine - a general solution that takes in some set of order lines instead of doing point calculations.
+    Further, a proper CCE would take into account the existing portfolio (e.g. maybe there are some long puts that are helpful.
+    A further improvement would be to make it a service and have it point out the least expensive ways to free up collateral (e.g. rolling
+    long puts up and long calls down). 
+    """
     def get_collateral_required(self) -> Amount:
         pass
 

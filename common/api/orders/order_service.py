@@ -4,8 +4,8 @@ from common.api.orders.cancel_order_request import CancelOrderRequest
 from common.api.orders.cancel_order_response import CancelOrderResponse
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
-from common.api.orders.order_list_request import OrderListRequest
-from common.api.orders.order_list_response import OrderListResponse
+from common.api.orders.order_list_request import ListOrdersRequest
+from common.api.orders.order_list_response import ListOrdersResponse
 from common.api.orders.place_modify_order_request import PlaceModifyOrderRequest
 from common.api.orders.place_modify_order_response import PlaceModifyOrderResponse
 from common.api.orders.place_order_request import PlaceOrderRequest
@@ -21,7 +21,7 @@ class OrderService(ABC):
     def __init__(self, connector: Connector):
         self.connector = connector
 
-    def list_orders(self, list_orders_request: OrderListRequest, exchange_specific_opts: dict[str, str]) -> OrderListResponse:
+    def list_orders(self, list_orders_request: ListOrdersRequest, exchange_specific_opts: dict[str, str]=None) -> ListOrdersResponse:
         pass
 
     def get_order(self, get_order_request: GetOrderRequest) -> GetOrderResponse:

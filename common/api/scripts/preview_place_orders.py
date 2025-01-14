@@ -8,7 +8,7 @@ import pytest
 from common.api.orders.cancel_order_request import CancelOrderRequest
 from common.api.orders.cancel_order_response import CancelOrderResponse
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
-from common.api.orders.order_list_request import OrderListRequest
+from common.api.orders.order_list_request import ListOrdersRequest
 from common.api.orders.order_metadata import OrderMetadata
 from common.api.orders.order_service import OrderService
 from common.api.orders.place_modify_order_request import PlaceModifyOrderRequest
@@ -151,7 +151,7 @@ def test_option_order_for_preview_place_preview_modify_and_place_modify(order_se
 
 
 def test_set_options_order_for_preview(order_service: OrderService, account_key: str):
-    list_order_request = OrderListRequest(account_key, OrderStatus.OPEN, JAN_1_2024, TODAY, 50)
+    list_order_request = ListOrdersRequest(account_key, OrderStatus.OPEN, JAN_1_2024, TODAY, 50)
     orders = order_service.list_orders(list_order_request, dict())
     assert orders.order_list[0].placed_order_details.status == OrderStatus.OPEN
 
