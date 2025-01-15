@@ -18,7 +18,6 @@ class TestOrderPrice:
     def test_non_equality_diff_order_price_type(self):
             assert OrderPrice(OrderPriceType.NET_CREDIT, Amount(1, 23)) != OrderPrice(OrderPriceType.NET_DEBIT,
                                                                                       Amount(1, 23))
-
     def test_gt(self):
         assert OrderPrice(OrderPriceType.NET_EVEN) > OrderPrice(OrderPriceType.NET_DEBIT, Amount(0,1))
         assert OrderPrice(OrderPriceType.NET_CREDIT, Amount(0,1)) > OrderPrice(OrderPriceType.NET_DEBIT, Amount(0, 1))
@@ -30,3 +29,6 @@ class TestOrderPrice:
 
     def test_lt_two_debits(self):
         assert OrderPrice(OrderPriceType.NET_DEBIT, Amount(0,2)) < OrderPrice(OrderPriceType.NET_DEBIT, Amount(0, 1))
+
+    def test_lt_two_credits(self):
+        assert OrderPrice(OrderPriceType.NET_CREDIT, Amount(0,2)) < OrderPrice(OrderPriceType.NET_CREDIT, Amount(0, 3))
