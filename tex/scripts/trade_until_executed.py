@@ -21,12 +21,14 @@ from quotes.quote_service import QuoteService
 
 DEFAULT_WAIT: datetime.timedelta = datetime.timedelta(seconds=5)
 DEFAULT_INITIAL_DELTA = Amount(0, 10)
-DEFAULT_PRICE_DELTA = Amount(0, 2)
+DEFAULT_NO_BIDS_PRICE = Amount(0, 2)
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'integration_test_properties.ini')
 ACCOUNT_ID_KEY = 'ACCOUNT_ID_KEY'
 
 config = configparser.ConfigParser()
+
+ZERO = Amount(0,0)
 
 @pytest.fixture
 def connector():
@@ -70,7 +72,12 @@ def get_market_price(order: Order, quote_service: QuoteService)-> Amount:
     for order_line in order.order_lines:
         get_tradable_request: GetTradableRequest = GetTradableRequest(order_line.tradable)
         get_tradable_response: GetTradableResponse = quote_service.get_tradable_quote(get_tradable_request)
-        if Action.is_long(order_line.action):
+        if get_tradable_response.current_price.bid == 0:
+            # sometimes for thinly traded, far OTM options, the spreads are quite wide.
+            # if the delta is >= $.10, we can just mark it as "$.02", since it takes at least $.01 to buy, and
+            # these are often thinly traded, so we'll have to add a bit more.
+            mark_to_market_price += DEFAULT_NO_BIDS_PRICE
+        elif Action.is_long(order_line.action):
             mark_to_market_price += get_tradable_response.current_price.mark
         else:
             mark_to_market_price -= get_tradable_response.current_price.mark

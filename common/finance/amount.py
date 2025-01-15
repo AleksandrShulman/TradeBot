@@ -108,7 +108,7 @@ class Amount:
         if self.negative:
             nominal = -1 * nominal
         if other.negative:
-            nominal_other = -1 * nominal
+            nominal_other = -1 * nominal_other
 
         return nominal < nominal_other
 
@@ -133,3 +133,6 @@ class Amount:
     def __hash__(self):
         # TODO: Figure out a more standard way of hashing
         return hash(str(self.whole) + str(self.part) + str(self.currency))
+
+
+ZERO = Amount(0,0)

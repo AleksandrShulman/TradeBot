@@ -1,9 +1,10 @@
-from common.finance.amount import Amount
+
+from common.finance.amount import Amount, ZERO
 from common.order.order_price_type import OrderPriceType
 
 
 class OrderPrice:
-    def __init__(self, order_price_type: OrderPriceType, price: Amount):
+    def __init__(self, order_price_type: OrderPriceType, price: Amount=Amount(0,0)):
         self.order_price_type: OrderPriceType = order_price_type
 
         if order_price_type is OrderPriceType.NET_EVEN and price != Amount(0,0):
@@ -15,9 +16,26 @@ class OrderPrice:
         return f"{self.order_price_type.name}: {self.price}"
 
     def __eq__(self, other):
+        # TODO: Unit test this
         if self.order_price_type != other.order_price_type:
-            return False
+            if (self.order_price_type == OrderPriceType.NET_EVEN and other.price == ZERO) or (other.order_price_type == OrderPriceType.NET_EVEN and self.price == ZERO):
+                print("Logical equality, though not object equality")
+            else:
+                return False
         if self.price != other.price:
             return False
-
         return True
+
+    def __gt__(self, other):
+        # TODO: Make sure this doesn't return true something when it's equal
+        self_absolute_amount = self.price if self.order_price_type != OrderPriceType.NET_DEBIT else self.price * -1
+        other_absolute_amount = other.price if other.order_price_type != OrderPriceType.NET_DEBIT else other.price * -1
+
+        return self_absolute_amount > other_absolute_amount
+
+    def __lt__(self, other):
+        # TODO: Make sure this doesn't return true something when it's equal
+        self_absolute_amount = self.price if self.order_price_type != OrderPriceType.NET_DEBIT else self.price * -1
+        other_absolute_amount = other.price if other.order_price_type != OrderPriceType.NET_DEBIT else other.price * -1
+
+        return self_absolute_amount < other_absolute_amount
