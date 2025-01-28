@@ -56,7 +56,6 @@ def spread_order(order_service, account_key)-> (str, PlacedOrder):
     res: PlaceOrderResponse = order_service.preview_and_place_order(req)
     return res.order_id, res.order
 
-
 def test_get_date_range_orders_within_range(order_service: OrderService, account_key: str):
     start_date = JAN_1_2024
     end_date = JAN_2_2024

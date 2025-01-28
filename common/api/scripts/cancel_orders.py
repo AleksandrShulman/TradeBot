@@ -6,11 +6,8 @@ import pytest
 from common.api.orders.cancel_order_request import CancelOrderRequest
 from common.api.orders.cancel_order_response import CancelOrderResponse
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
-from common.api.orders.order_metadata import OrderMetadata
 from common.api.orders.order_service import OrderService
-from common.api.test.orders.order_test_util import OrderTestUtil
 from common.exchange.etrade.etrade_connector import ETradeConnector
-from common.order.order_type import OrderType
 
 ORDER_IDS_TO_CANCEL = range(81276, 81285)
 
