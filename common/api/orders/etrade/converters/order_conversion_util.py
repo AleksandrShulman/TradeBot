@@ -6,6 +6,7 @@ from common.finance.equity import Equity
 from common.finance.exercise_style import ExerciseStyle
 from common.finance.option import Option
 from common.finance.option_type import OptionType
+from common.finance.price import Price
 from common.finance.tradable import Tradable
 from common.order.action import Action
 from common.order.executed_order import ExecutedOrder
@@ -50,8 +51,13 @@ class OrderConversionUtil:
         replaces_order_id = order_detail['replacesOrderId'] if 'replacesOrderId' in order_detail else None
         market_session = MarketSession[order_detail["marketSession"]]
         ratio = order_detail['ratio'] if 'ratio' in order_detail else None
+        mark_price = order_detail['netPrice']
+        bid_price = order_detail['netBid']
+        ask_price = order_detail['netAsk']
 
-        placed_order_details = PlacedOrderDetails(account_id, order_id, status, order_placed_time, market_session, replaces_order_id)
+        order_market_price = Price(bid_price, ask_price, mark_price)
+
+        placed_order_details = PlacedOrderDetails(account_id, order_id, status, order_placed_time, order_market_price, market_session, replaces_order_id)
 
         return PlacedOrder(order, placed_order_details)
 

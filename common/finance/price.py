@@ -10,8 +10,12 @@ class Price:
         if last:
            self.last = round(last, 2)
 
+    def __repr__(self):
+        self.mark = round(mean([self.bid, self.ask]), 2) if not self.mark else self.mark
+        return f"{self.mark:.2f}\t|\t{self.bid:.2f}\t|\t{self.ask:.2f}\t"
+
     def __str__(self):
-        self.mark = round(mean([self.bid, self.ask]), 2)
+        self.mark = round(mean([self.bid, self.ask]), 2) if not self.mark else self.mark
         return f"{self.mark:.2f}\t|\t{self.bid:.2f}\t|\t{self.ask:.2f}\t"
 
     def copy_of(self):

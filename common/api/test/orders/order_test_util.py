@@ -1,6 +1,10 @@
 import string
+from collections import deque
 from datetime import datetime
 from random import choices
+from xml.sax import default_parser_list
+
+from pygments.lexer import default
 
 from common.finance.amount import Amount
 from common.finance.currency import Currency
@@ -14,14 +18,15 @@ from common.order.order_line import OrderLine
 from common.order.order_price import OrderPrice
 from common.order.order_price_type import OrderPriceType
 
+DEFAULT_AMOUNT = Amount(100, 0)
 
 class OrderTestUtil:
 
     @staticmethod
-    def build_equity_order():
+    def build_equity_order(action=Action.BUY, price: Amount = DEFAULT_AMOUNT):
         tradable: Equity = Equity("GE", "General Electric")
-        ol_1 = OrderLine(tradable, Action.BUY, 5)
-        order_price: OrderPrice = OrderPrice(OrderPriceType.LIMIT, Amount(100, 0))
+        ol_1 = OrderLine(tradable, action, 5)
+        order_price: OrderPrice = OrderPrice(OrderPriceType.LIMIT, price)
         order_lines: list[OrderLine] = [ol_1]
 
         order = Order(None, GoodForDay(), order_lines, order_price)
