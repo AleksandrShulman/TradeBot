@@ -1,40 +1,48 @@
 import configparser
 import datetime
 import os
+from time import sleep
 
 import pytest
 
+from common.api.orders.cancel_order_request import CancelOrderRequest
+from common.api.orders.cancel_order_response import CancelOrderResponse
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
+from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.order_metadata import OrderMetadata
 from common.api.orders.order_service import OrderService
+from common.api.orders.place_order_response import PlaceOrderResponse
 from common.api.orders.preview_order_request import PreviewOrderRequest
 from common.api.test.orders.order_test_util import OrderTestUtil
 from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.finance.amount import Amount
+from common.finance.equity import Equity
 from common.order.action import Action
-from common.order.order import Order
 from common.order.order_price_type import OrderPriceType
-from quotes.api.get_tradable_request import GetTradableRequest
-from quotes.api.get_tradable_response import GetTradableResponse
+from common.order.order_status import OrderStatus
+from common.order.order_type import OrderType
+from common.order.placed_order import PlacedOrder
 from quotes.etrade.etrade_quote_service import ETradeQuoteService
 from quotes.quote_service import QuoteService
+from tex.tactics.incremental_price_delta_execution_tactic import IncrementalPriceDeltaExecutionTactic
+from tex.trade_execution_util import TradeExecutionUtil
 
 DEFAULT_WAIT: datetime.timedelta = datetime.timedelta(seconds=5)
-DEFAULT_INITIAL_DELTA = Amount(0, 10)
-DEFAULT_NO_BIDS_PRICE = Amount(0, 2)
+DEFAULT_INITIAL_DELTA = Amount(0, 25)
 
-CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'integration_test_properties.ini')
+CONFIG_FILE = os.path.join(os.path.dirname(__file__),'../../common/api/scripts/', 'integration_test_properties.ini')
 ACCOUNT_ID_KEY = 'ACCOUNT_ID_KEY'
 
 config = configparser.ConfigParser()
+config.read(CONFIG_FILE)
+
+SFIX = Equity("SFIX", "STITCH FIX INC COM CL A")
 
 ZERO = Amount(0,0)
 
 @pytest.fixture
 def connector():
-    config.read(CONFIG_FILE)
-    connector: ETradeConnector = ETradeConnector()
-    return connector
+    return ETradeConnector()
 
 @pytest.fixture
 def quote_service(connector):
@@ -46,40 +54,58 @@ def order_service(connector):
     o: OrderService = ETradeOrderService(connector)
     return o
 
+@pytest.fixture
+def account_id()->str:
+    return config['ETRADE'][ACCOUNT_ID_KEY]
 
-def test_lower_until_executed(quote_service: QuoteService, order_service: OrderService):
+def test_lower_until_executed(account_id: str, quote_service: QuoteService, order_service: OrderService):
 
-    order = OrderTestUtil.build_spread_order()
-    order_price = order.order_price
-    order_market_price: Amount = get_market_price(order, quote_service)
+    # The pattern is we'll put in the order, to get a sense of the actual price, once the response returns. From there, we'll keep getting new prices until it's clsoed.
+    # Get a sense of what it may be worth
+    order = OrderTestUtil.build_equity_order(equity=SFIX, action=Action.BUY)
+    order_market_price: Amount = TradeExecutionUtil.get_market_price(order, quote_service)
     print(f"Security currently at: {order_market_price}")
 
-    # Place order at $.05 MORE for SELL and $.05 LESS for BUY
-    order_price.price = order_market_price + DEFAULT_INITIAL_DELTA if order_price.order_price_type is OrderPriceType.NET_CREDIT else order_market_price - DEFAULT_INITIAL_DELTA
+    # Find a price that's reasonable ..
+    potential_order_price: Amount = order_market_price + DEFAULT_INITIAL_DELTA if order.order_price.order_price_type is OrderPriceType.NET_CREDIT else order_market_price - DEFAULT_INITIAL_DELTA
+    order.order_price.price = potential_order_price
 
-    order_metadata: OrderMetadata = OrderMetadata()
-    preview_order_request: PreviewOrderRequest = PreviewOrderRequest()
-    order_service.preview_and_place_order
+    client_order_id = OrderTestUtil.generate_random_client_order_id()
+    order_metadata: OrderMetadata = OrderMetadata(OrderType.EQ, account_id, client_order_id)
+    preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
+
     # place the order
+    place_order_response: PlaceOrderResponse = order_service.preview_and_place_order(preview_order_request)
+    order_id = place_order_response.order_id
 
+    placed_order: PlacedOrder = order_service.get_order(GetOrderRequest(account_id, order_id)).placed_order
+    new_price, wait_period = IncrementalPriceDeltaExecutionTactic.new_price(placed_order, quote_service)
 
+    while placed_order.placed_order_details.status == OrderStatus.OPEN:
+        preview_order_request.order.order_price.price = new_price
+        preview_order_request.order_metadata.client_order_id = OrderTestUtil.generate_random_client_order_id()
 
+        print("Cancelling old order")
+        cancel_order_request: CancelOrderRequest = CancelOrderRequest(account_id, order_id)
+        response: CancelOrderResponse = order_service.cancel_order(cancel_order_request)
+        print(f"Cancelled old order {response.order_id}")
 
-# This can also be done via a Bid-Ask - advantage is fewer API calls. Downside is relying on ETrade's order service
-# This would be necessary to establish a first price for the order
-def get_market_price(order: Order, quote_service: QuoteService)-> Amount:
-    mark_to_market_price: float = 0
-    for order_line in order.order_lines:
-        get_tradable_request: GetTradableRequest = GetTradableRequest(order_line.tradable)
-        get_tradable_response: GetTradableResponse = quote_service.get_tradable_quote(get_tradable_request)
-        if get_tradable_response.current_price.bid == 0:
-            # sometimes for thinly traded, far OTM options, the spreads are quite wide.
-            # if the delta is >= $.10, we can just mark it as "$.02", since it takes at least $.01 to buy, and
-            # these are often thinly traded, so we'll have to add a bit more.
-            mark_to_market_price += DEFAULT_NO_BIDS_PRICE
-        elif Action.is_long(order_line.action):
-            mark_to_market_price += get_tradable_response.current_price.mark
-        else:
-            mark_to_market_price -= get_tradable_response.current_price.mark
+        print("Submitted new order")
+        response: PlaceOrderResponse = order_service.preview_and_place_order(preview_order_request)
+        print(f"New order is {response.order_id}")
+        order_id = response.order_id
 
-    return Amount.from_float(mark_to_market_price)
+        order_status = order_service.get_order(GetOrderRequest(account_id, order_id)).placed_order.placed_order_details.status
+        print(f"Order status {response.order_id}: {order_status}")
+        if order_status == OrderStatus.EXECUTED:
+            print("Awesome, it executed!")
+            break
+
+        print("Sleeping before adding new order")
+        sleep(wait_period)
+
+        placed_order: PlacedOrder = order_service.get_order(GetOrderRequest(account_id, order_id)).placed_order
+        new_price, wait_period = IncrementalPriceDeltaExecutionTactic.new_price(placed_order, quote_service)
+        print("Done sleeping. Updating order")
+
+    pass

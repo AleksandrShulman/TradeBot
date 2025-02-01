@@ -23,6 +23,10 @@ class Amount:
         if "." in input_str:
             (whole, part) = input_str.split('.')
             part = part[:2]
+            # To compensate for the fact that turning a float into a string will truncate the ending 0, turning
+            # an '80' into an '8'.
+            if len(part) == 1:
+                part = int(part)*10
         else:
             input_str = input_str.strip("$")
             whole = input_str

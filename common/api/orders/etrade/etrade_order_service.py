@@ -216,6 +216,7 @@ class ETradeOrderService(OrderService):
             message_type = message['type']
             messages.append(ETradeOrderResponseMessage(code, description, message_type))
 
+        # TODO: Why isn't this a PlacedOrder? b/c 'OrderDetail' isn't available from order_dict here.
         order: Order = OrderConversionUtil.to_order_from_json(order_dict)
 
         if previous_order_id:

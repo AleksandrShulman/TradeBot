@@ -19,13 +19,13 @@ from common.order.order_price import OrderPrice
 from common.order.order_price_type import OrderPriceType
 
 DEFAULT_AMOUNT = Amount(100, 0)
+DEFAULT_EQUITY = Equity("GE", "General Electric")
 
 class OrderTestUtil:
 
     @staticmethod
-    def build_equity_order(action=Action.BUY, price: Amount = DEFAULT_AMOUNT):
-        tradable: Equity = Equity("GE", "General Electric")
-        ol_1 = OrderLine(tradable, action, 5)
+    def build_equity_order(equity:Equity=DEFAULT_EQUITY, action=Action.BUY, price: Amount = DEFAULT_AMOUNT):
+        ol_1 = OrderLine(equity, action, 1)
         order_price: OrderPrice = OrderPrice(OrderPriceType.LIMIT, price)
         order_lines: list[OrderLine] = [ol_1]
 

@@ -33,7 +33,7 @@ def order_service(connector):
     return ETradeOrderService(connector)
 
 def get_order_response(action: Action, current_order_price: Amount, current_market_price_equity: Price):
-    equity_order: Order = OrderTestUtil.build_equity_order(action, current_order_price)
+    equity_order: Order = OrderTestUtil.build_equity_order(action=action, price=current_order_price)
     placed_order_details: PlacedOrderDetails = PlacedOrderDetails("account1", "123", OrderStatus.OPEN, datetime.datetime.now(), current_market_price_equity)
     placed_order: PlacedOrder = PlacedOrder(equity_order, placed_order_details)
     return GetOrderResponse(placed_order)

@@ -51,6 +51,8 @@ class OrderConversionUtil:
         replaces_order_id = order_detail['replacesOrderId'] if 'replacesOrderId' in order_detail else None
         market_session = MarketSession[order_detail["marketSession"]]
         ratio = order_detail['ratio'] if 'ratio' in order_detail else None
+
+        # TODO: These seem to be zero .. not sure if that's an after-hours issue, or something more fundamental
         mark_price = order_detail['netPrice']
         bid_price = order_detail['netBid']
         ask_price = order_detail['netAsk']

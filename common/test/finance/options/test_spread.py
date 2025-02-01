@@ -9,7 +9,6 @@ from common.finance.option import Option
 from common.finance.option_type import OptionType
 from common.finance.options.equity_order_line import EquityOrderLine
 from common.finance.options.mixed.buy_write import BuyWrite
-from common.finance.options.option_order import OptionOrder
 from common.finance.options.option_order_line import OptionOrderLine
 from common.finance.options.spread import Spread, DE_NORMALIZATION_CONSTANT
 from common.order.action import Action

@@ -1,5 +1,3 @@
-from numpy.ma.core import equal
-
 from common.finance.amount import Amount
 from common.finance.currency import Currency
 
@@ -15,6 +13,8 @@ def test_add_two_amounts():
     assert a3.currency == Currency.US_DOLLARS
     assert not a3.negative
 
+def test_no_trailing_zero_after_decimal():
+    assert Amount.from_string("5.2") == Amount(5, 20)
 
 def test_subtract_two_amounts():
     a1 = Amount(10, 15, Currency.US_DOLLARS)
