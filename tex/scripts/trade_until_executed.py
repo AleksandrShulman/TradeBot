@@ -5,6 +5,7 @@ from time import sleep
 
 import pytest
 
+from common.api.orders.OrderUtil import OrderUtil
 from common.api.orders.cancel_order_request import CancelOrderRequest
 from common.api.orders.cancel_order_response import CancelOrderResponse
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
@@ -22,7 +23,6 @@ from common.order.action import Action
 from common.order.order_price_type import OrderPriceType
 from common.order.order_status import OrderStatus
 from common.order.order_type import OrderType
-from common.order.placed_order import PlacedOrder
 from quotes.etrade.etrade_quote_service import ETradeQuoteService
 from quotes.quote_service import QuoteService
 from tex.tactics.incremental_price_delta_execution_tactic import IncrementalPriceDeltaExecutionTactic
@@ -71,7 +71,7 @@ def test_lower_until_executed(account_id: str, quote_service: QuoteService, orde
     potential_order_price: Amount = order_market_price + DEFAULT_INITIAL_DELTA if order.order_price.order_price_type is OrderPriceType.NET_CREDIT else order_market_price - DEFAULT_INITIAL_DELTA
     order.order_price.price = potential_order_price
 
-    client_order_id = OrderTestUtil.generate_random_client_order_id()
+    client_order_id = OrderUtil.generate_random_client_order_id()
     order_metadata: OrderMetadata = OrderMetadata(order.get_order_type(), account_id, client_order_id)
     preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
 
@@ -80,7 +80,6 @@ def test_lower_until_executed(account_id: str, quote_service: QuoteService, orde
     order_id = place_order_response.order_id
 
     adjust_order_until_executed(account_id, order_id, order_service, quote_service)
-
 
 def adjust_order_until_executed(account_id: str, order_id: str, order_service: OrderService, quote_service: QuoteService):
         # Get information about the order
@@ -97,7 +96,7 @@ def adjust_order_until_executed(account_id: str, order_id: str, order_service: O
 
             new_price, wait_period = IncrementalPriceDeltaExecutionTactic.new_price(placed_order, quote_service)
             order.order_price.price = new_price
-            order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, OrderTestUtil.generate_random_client_order_id())
+            order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, OrderUtil.generate_random_client_order_id())
             preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
 
             # place the order

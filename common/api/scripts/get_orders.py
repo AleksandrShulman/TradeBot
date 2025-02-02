@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pytest
 
+from common.api.orders.OrderUtil import OrderUtil
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
@@ -51,7 +52,7 @@ def order_service():
 @pytest.fixture()
 def spread_order(order_service, account_key)-> (str, PlacedOrder):
     order = OrderTestUtil.build_spread_order()
-    order_metadata: OrderMetadata = OrderMetadata(order.get_order_type(), account_key, OrderTestUtil.generate_random_client_order_id())
+    order_metadata: OrderMetadata = OrderMetadata(order.get_order_type(), account_key, OrderUtil.generate_random_client_order_id())
     req: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
     res: PlaceOrderResponse = order_service.preview_and_place_order(req)
     return res.order_id, res.order

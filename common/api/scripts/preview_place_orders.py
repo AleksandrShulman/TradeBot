@@ -5,6 +5,7 @@ from datetime import datetime
 
 import pytest
 
+from common.api.orders.OrderUtil import OrderUtil
 from common.api.orders.cancel_order_request import CancelOrderRequest
 from common.api.orders.cancel_order_response import CancelOrderResponse
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
@@ -58,7 +59,7 @@ def order_service():
 def test_equity_order_for_preview_and_place(order_service: OrderService, account_key: str):
     order_type: OrderType = OrderType.EQ
     account_id = account_key
-    client_order_id = OrderTestUtil.generate_random_client_order_id()
+    client_order_id = OrderUtil.generate_random_client_order_id()
     order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, client_order_id)
 
     order = OrderTestUtil.build_equity_order()
@@ -76,7 +77,7 @@ def test_equity_order_for_preview_and_place(order_service: OrderService, account
 def test_equity_order_for_preview_place_and_cancel(order_service: OrderService, account_key: str):
     order_type: OrderType = OrderType.EQ
     account_id = account_key
-    client_order_id = OrderTestUtil.generate_random_client_order_id()
+    client_order_id = OrderUtil.generate_random_client_order_id()
     order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, client_order_id)
 
     order = OrderTestUtil.build_equity_order()
@@ -97,7 +98,7 @@ def test_equity_order_for_preview_place_and_cancel(order_service: OrderService, 
 def test_option_order_for_preview_and_place(order_service: OrderService, account_key: str):
     order_type: OrderType = OrderType.SPREADS
     account_id = account_key
-    client_order_id = OrderTestUtil.generate_random_client_order_id()
+    client_order_id = OrderUtil.generate_random_client_order_id()
     order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, client_order_id)
 
     order = OrderTestUtil.build_spread_order()
@@ -113,7 +114,7 @@ def test_option_order_for_preview_and_place(order_service: OrderService, account
 def test_option_order_for_preview_place_preview_modify_and_place_modify(order_service: OrderService, account_key: str):
     order_type: OrderType = OrderType.SPREADS
     account_id = account_key
-    client_order_id = OrderTestUtil.generate_random_client_order_id()
+    client_order_id = OrderUtil.generate_random_client_order_id()
     order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, client_order_id)
 
     order = OrderTestUtil.build_spread_order()
@@ -135,7 +136,7 @@ def test_option_order_for_preview_place_preview_modify_and_place_modify(order_se
     modified_order.order_price.price = modified_order.order_price.price + Amount(0,5)
 
     # Regenerate client
-    order_metadata.client_order_id = OrderTestUtil.generate_random_client_order_id()
+    order_metadata.client_order_id = OrderUtil.generate_random_client_order_id()
 
     # Preview Modify
     preview_modify_order_request: PreviewModifyOrderRequest = PreviewModifyOrderRequest(order_metadata, placed_order_id, modified_order)

@@ -3,6 +3,7 @@ import os
 
 import pytest
 
+from common.api.orders.OrderUtil import OrderUtil
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.order_metadata import OrderMetadata
@@ -38,7 +39,7 @@ def test_submit_orders(order_service: OrderService, account_id: str):
 
     order_type: OrderType = order.get_order_type()
 
-    client_order_id = OrderTestUtil.generate_random_client_order_id()
+    client_order_id = OrderUtil.generate_random_client_order_id()
     order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, client_order_id)
 
     preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
