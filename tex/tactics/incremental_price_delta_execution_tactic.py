@@ -11,6 +11,7 @@ from tex.trade_execution_util import TradeExecutionUtil
 
 GAP_REDUCTION_RATIO = 1/3
 DEFAULT_WAIT_SEC = 4
+VERY_CLOSE_TO_MARKET_PRICE_WAIT = 30
 
 class IncrementalPriceDeltaExecutionTactic(ExecutionTactic):
     @staticmethod
@@ -30,18 +31,21 @@ class IncrementalPriceDeltaExecutionTactic(ExecutionTactic):
             if order_price_type in [OrderPriceType.NET_CREDIT, OrderPriceType.LIMIT]:
                 # decrease the price
                 new_delta = delta * (1-GAP_REDUCTION_RATIO)
-                adjustment = delta - new_delta
-                return (Amount.from_float(current_order_price - adjustment), DEFAULT_WAIT_SEC)
+                adjustment = max(delta - new_delta, .01)
+                return Amount.from_float(round(current_order_price - adjustment,2)), DEFAULT_WAIT_SEC
             else:
                 # this means that we're actually buying over the current market price, and it represents a stuck market
                 pass
         else:
             if order_price_type in [OrderPriceType.NET_DEBIT, OrderPriceType.LIMIT]:
                 new_delta = delta * (1 - GAP_REDUCTION_RATIO)
-                adjustment = delta - new_delta
-                return (Amount.from_float(current_order_price - adjustment), DEFAULT_WAIT_SEC)
+
+                adjustment = min(delta-new_delta, -0.01)
+                wait_time = DEFAULT_WAIT_SEC
+
+                return Amount.from_float(round(current_order_price - adjustment,2)), wait_time
             else:
                 # this means that we're actually selling under the current market price, and it represents a stuck market
                 pass
         # Should have a better default return value
-        return (Amount(0,0), DEFAULT_WAIT_SEC)
+        return Amount(0,0), DEFAULT_WAIT_SEC

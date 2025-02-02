@@ -149,6 +149,7 @@ class OrderTestUtil:
 
         return Order(None, GoodForDay(), order_lines, order_price)
 
+    # TODO - place this outside of a testing class b/c it's used as a general util
     @staticmethod
     def generate_random_client_order_id():
         return "".join(choices(string.ascii_uppercase + string.digits, k=15))

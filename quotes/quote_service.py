@@ -16,7 +16,7 @@ class QuoteService(ABC):
     def __init__(self, connector: Connector):
         self.connector = connector
 
-    def get_tradable_quote(self, reqest: GetTradableRequest) -> GetTradableResponse:
+    def get_tradable_quote(self, request: GetTradableRequest) -> GetTradableResponse:
         pass
 
     def get_option_expire_dates(self, get_options_expire_dates_request: GetOptionExpireDatesRequest) -> GetOptionExpireDatesResponse:

@@ -15,7 +15,6 @@ from common.order.order import Order
 from common.order.order_status import OrderStatus
 from common.order.placed_order import PlacedOrder
 from common.order.placed_order_details import PlacedOrderDetails
-from tex.scripts.trade_until_executed import get_market_price
 from tex.tactics.incremental_price_delta_execution_tactic import IncrementalPriceDeltaExecutionTactic
 
 
@@ -43,7 +42,7 @@ def test_order_price_less_than_market_price_debit():
     ORDER_PRICE_EXACTLY_100: Amount = Amount(100, 0)
 
     placed_order = get_order_response(Action.BUY, ORDER_PRICE_EXACTLY_100, MARKET_PRICE_NEAR_125).placed_order
-    new_price: Amount = IncrementalPriceDeltaExecutionTactic.new_price(placed_order)
+    new_price, _ = IncrementalPriceDeltaExecutionTactic.new_price(placed_order)
 
     assert new_price == Amount(108,33)
 
@@ -53,6 +52,6 @@ def test_order_price_more_than_market_price_credit():
     ORDER_PRICE_EXACTLY_200 = Amount(200, 0)
 
     placed_order = get_order_response(Action.SELL, ORDER_PRICE_EXACTLY_200, MARKET_PRICE_NEAR_125).placed_order
-    new_price: Amount = IncrementalPriceDeltaExecutionTactic.new_price(placed_order)
+    new_price, _ = IncrementalPriceDeltaExecutionTactic.new_price(placed_order)
 
-    assert new_price == Amount(175, 0)
+    assert new_price == Amount(175,0)

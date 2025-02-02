@@ -205,6 +205,10 @@ class ETradeOrderService(OrderService):
     def _parse_place_order_response(response, order_metadata: OrderMetadata, preview_id: str, previous_order_id=None)-> PlaceOrderResponse:
         data = json.loads(response.text)
         place_order_response = data["PlaceOrderResponse"]
+        order_type = place_order_response['orderType'] if 'orderType' in place_order_response else None
+
+        if not order_metadata.order_type:
+            order_metadata.order_type = order_type
 
         order_id = place_order_response['OrderIds'][0]["orderId"]
         order_dict = place_order_response["Order"][0]

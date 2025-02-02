@@ -2,7 +2,6 @@ from common.api.orders.order_metadata import OrderMetadata
 from common.api.orders.order_placement_message import OrderPlacementMessage
 from common.api.response import Response
 from common.order.order import Order
-from common.order.placed_order import PlacedOrder
 
 
 class PlaceOrderResponse(Response):
