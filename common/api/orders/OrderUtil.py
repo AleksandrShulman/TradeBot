@@ -3,47 +3,55 @@ from datetime import datetime, time
 from random import choices
 
 import pytz
+from dateutil.tz import tz
 
 EXTENDED_15_MINS_TICKERS = ["VIX", "VIXW", "SPY", "GLD"]
 
+
 MARKET_CLOSED_DAYS_2025 = [
-    datetime(2025, 1, 1).date(),
-    datetime(2025, 1, 20).date(),
-    datetime(2025, 2, 17).date(),
-    datetime(2025, 4, 18).date(),
-    datetime(2025, 5, 26).date(),
-    datetime(2025, 6, 19).date(),
-    datetime(2025, 7, 4).date(),
-    datetime(2025, 9, 1).date(),
-    datetime(2025, 11, 27).date(),
-    datetime(2025, 12, 25).date()
+    datetime(2025, 1, 1, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2025, 1, 20, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2025, 2, 17, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2025, 4, 18, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2025, 5, 26, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2025, 6, 19, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2025, 7, 4, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2025, 9, 1, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2025, 11, 27, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2025, 12, 25, tzinfo=tz.gettz('US/Pacific')).date()
 ]
 
 MARKET_CLOSED_DAYS_2026 = [
-    datetime(2026, 1, 1).date(),
-    datetime(2026, 1, 20).date(),
-    datetime(2026, 2, 17).date(),
-    datetime(2026, 4, 18).date(),
-    datetime(2026, 5, 26).date(),
-    datetime(2026, 6, 19).date(),
-    datetime(2026, 7, 4).date(),
-    datetime(2026, 9, 1).date(),
-    datetime(2026, 11, 27).date(),
-    datetime(2026, 12, 25).date()
+    datetime(2026, 1, 1, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2026, 1, 20, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2026, 2, 17, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2026, 4, 18, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2026, 5, 26, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2026, 6, 19, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2026, 7, 4, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2026, 9, 1, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2026, 11, 27, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2026, 12, 25, tzinfo=tz.gettz('US/Pacific')).date()
 ]
 
 MARKET_CLOSED_DAYS_2027 = [
-    datetime(2027, 1, 1).date(),
-    datetime(2027, 1, 18).date(),
-    datetime(2027, 2, 15).date(),
-    datetime(2027, 3, 26).date(),
-    datetime(2027, 5, 31).date(),
-    datetime(2027, 6, 18).date(),
-    datetime(2027, 7, 5).date(),
-    datetime(2027, 9, 6).date(),
-    datetime(2027, 11, 25).date(),
-    datetime(2027, 12, 24).date()
+    datetime(2027, 1, 1, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2027, 1, 18, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2027, 2, 15, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2027, 3, 26, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2027, 5, 31, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2027, 6, 18, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2027, 7, 5, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2027, 9, 6, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2027, 11, 25, tzinfo=tz.gettz('US/Pacific')).date(),
+    datetime(2027, 12, 24, tzinfo=tz.gettz('US/Pacific')).date()
 ]
+
+MARKET_CLOSED_DAYS = {
+    2025: MARKET_CLOSED_DAYS_2025,
+    2026: MARKET_CLOSED_DAYS_2026,
+    2027: MARKET_CLOSED_DAYS_2027
+}
 
 class OrderUtil:
     @staticmethod
@@ -55,8 +63,9 @@ class OrderUtil:
 
         # Let's standardize on US Eastern Time
         input_time = current_time
+        current_year = input_time.year
 
-        if input_time.date() in MARKET_CLOSED_DAYS_2025:
+        if input_time.date() in MARKET_CLOSED_DAYS[current_year]:
             return False
 
         # Market closed to the day
@@ -68,7 +77,6 @@ class OrderUtil:
             return False
 
         return True
-        pass
 
 def after_hours_exception(symbol: str, now_eastern: datetime)->bool:
     return symbol in EXTENDED_15_MINS_TICKERS and now_eastern.time() > time(16, 0) and now_eastern.time() < time(16, 15)
