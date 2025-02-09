@@ -95,16 +95,20 @@ class Amount:
         return nominal
 
     def to_float(self):
-        return self.whole + self.part / 100.0
+        absolute_value = self.whole + self.part / 100.0
+        if self.negative:
+            return -1 * absolute_value
+        else:
+            return absolute_value
 
     def __str__(self):
-        if self.negative:
-            return f"-{self.whole}.{self.part}"
-        else:
-            return f"{self.whole}.{self.part}"
+        return f"{self.to_float():.2f}"
 
     def __repr__(self):
         return self.__str__()
+
+    def __abs__(self):
+        return Amount.from_float(abs(self.to_float()))
 
     def __le__(self, other):
         nominal: int = self.whole * 100 + self.part

@@ -1,51 +1,78 @@
 from datetime import timedelta
 
+from common.account.computed_balance import ZERO_AMOUNT
 from common.api.test.orders.order_test_util import DEFAULT_AMOUNT
 from common.finance.amount import Amount
 from common.finance.price import Price
+from common.order.action import Action
+from common.order.order_price import OrderPrice
 from common.order.order_price_type import OrderPriceType
+from common.order.order_type import OrderType
 from common.order.placed_order import PlacedOrder
 from quotes.quote_service import QuoteService
 from tex.tactics.execution_tactic import ExecutionTactic
 from tex.trade_execution_util import TradeExecutionUtil
 
 GAP_REDUCTION_RATIO = 1/3
-DEFAULT_WAIT_SEC = 4
+DEFAULT_WAIT_SEC = 10
 VERY_CLOSE_TO_MARKET_PRICE_WAIT = 30
 
 class IncrementalPriceDeltaExecutionTactic(ExecutionTactic):
     @staticmethod
-    def new_price(placed_order: PlacedOrder, quote_service: QuoteService=None)->(Amount, int):
+    def new_price(placed_order: PlacedOrder, quote_service: QuoteService=None)->(OrderPrice, int):
         current_market_price: Price = placed_order.placed_order_details.current_market_price
         current_market_mark_to_market_price: float = current_market_price.mark
+
+        # This'll always be positive. We'd need to normalize it WRT to the price type..where do we get the rest of the info?
         current_order_price: float = placed_order.order.order_price.price.to_float()
+        if placed_order.order.order_price.order_price_type == OrderPriceType.NET_DEBIT:
+            current_order_price *= -1
 
         if not current_market_mark_to_market_price and quote_service:
             # After-hours it doesn't seem to provide this data in the E*Trade response. No matter, we can pull it from the exchange
-            current_market_mark_to_market_price = TradeExecutionUtil.get_market_price(placed_order.order, quote_service).to_float()
+            current_market_mark_to_market_price: float = TradeExecutionUtil.get_market_price(placed_order.order, quote_service).mark
 
         delta = current_order_price - current_market_mark_to_market_price
-        order_price_type = placed_order.order.order_price.order_price_type
-        if delta > 0:
-            # For equity orders, this kind of does not make sense
-            if order_price_type in [OrderPriceType.NET_CREDIT, OrderPriceType.LIMIT]:
-                # decrease the price
-                new_delta = delta * (1-GAP_REDUCTION_RATIO)
-                adjustment = max(delta - new_delta, .01)
-                return Amount.from_float(round(current_order_price - adjustment,2)), DEFAULT_WAIT_SEC
-            else:
-                # this means that we're actually buying over the current market price, and it represents a stuck market
-                pass
+
+        if placed_order.order.get_order_type() == OrderType.EQ:
+            return IncrementalPriceDeltaExecutionTactic.get_equity_new_price(delta, current_order_price, placed_order)
         else:
-            if order_price_type in [OrderPriceType.NET_DEBIT, OrderPriceType.LIMIT]:
+            return IncrementalPriceDeltaExecutionTactic.get_spread_new_price(delta, current_order_price)
+
+    @staticmethod
+    def get_spread_new_price(delta, current_order_price):
+        if delta > 0:
+            new_delta = delta * (1 - GAP_REDUCTION_RATIO)
+            adjustment = round(min(new_delta - delta, -.01), 2)
+        else:
+            # If below the mark, adjust incrementally
+            adjustment = -.01
+
+        proposed_new_amount_float: float = round(current_order_price + adjustment, 2)
+        proposed_new_amount = Amount.from_float(proposed_new_amount_float)
+        if proposed_new_amount == ZERO_AMOUNT:
+            return OrderPrice(OrderPriceType.NET_EVEN, Amount(0,0)), DEFAULT_WAIT_SEC
+        elif proposed_new_amount < ZERO_AMOUNT:
+            return OrderPrice(OrderPriceType.NET_DEBIT, abs(proposed_new_amount)), DEFAULT_WAIT_SEC
+        else:
+            return OrderPrice(OrderPriceType.NET_CREDIT, proposed_new_amount), DEFAULT_WAIT_SEC
+
+    @staticmethod
+    def get_equity_new_price(delta, current_order_price, placed_order: PlacedOrder):
+        if placed_order.order.order_price.order_price_type == OrderPriceType.LIMIT:
+            action: Action = placed_order.order.order_lines[0].action
+            if Action.is_short(action):
+                # decrease the value
                 new_delta = delta * (1 - GAP_REDUCTION_RATIO)
-
-                adjustment = min(delta-new_delta, -0.01)
-                wait_time = DEFAULT_WAIT_SEC
-
-                return Amount.from_float(round(current_order_price - adjustment,2)), wait_time
+                adjustment = round(min(new_delta - delta, -.01), 2)
             else:
-                # this means that we're actually selling under the current market price, and it represents a stuck market
-                pass
-        # Should have a better default return value
-        return Amount(0,0), DEFAULT_WAIT_SEC
+                # increase the value
+                new_delta = delta * (1 - GAP_REDUCTION_RATIO)
+                adjustment = round(max(new_delta - delta, .01), 2)
+        else:
+            raise Exception("For ")
+
+        proposed_new_amount_float: float = round(current_order_price + adjustment, 2)
+        proposed_new_amount = Amount.from_float(proposed_new_amount_float)
+
+        return OrderPrice(OrderPriceType.LIMIT, proposed_new_amount), DEFAULT_WAIT_SEC

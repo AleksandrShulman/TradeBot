@@ -37,12 +37,14 @@ SPREAD_ORDER_ESTIMATED_COMMISSION = Amount(1,0)
 
 SPREAD_ORDER_METADATA = OrderMetadata(OrderType.SPREADS, ACCOUNT_ID, CLIENT_ORDER_ID)
 
+EXPECTED_ORDER_PRICE = OrderPrice(OrderPriceType.NET_CREDIT, Amount(2,49))
+
 PLACED_ORDER_ID = 81117
 
 SPREAD_PREVIEW_ORDER_RESPONSE_FILE = os.path.join(os.path.dirname(__file__), "./resources/output_preview_order_spread")
 SPREAD_PLACE_ORDER_RESPONSE_FILE = os.path.join(os.path.dirname(__file__), "./resources/output_place_order_spread")
 
-SPREAD_ORDER = OrderTestUtil.build_spread_order()
+SPREAD_ORDER = OrderTestUtil.build_spread_order(EXPECTED_ORDER_PRICE)
 SPREAD_ORDER.order_id_to_modify = PLACED_ORDER_ID
 
 @pytest.fixture
@@ -60,11 +62,9 @@ def preview_request()->PreviewOrderRequest:
 def preview_order_spread_response():
     return _read_input(SPREAD_PREVIEW_ORDER_RESPONSE_FILE)
 
-
 @pytest.fixture
 def place_order_spread_response():
     return _read_input(SPREAD_PLACE_ORDER_RESPONSE_FILE)
-
 
 @pytest.fixture
 @patch('rauth.OAuth1Session')
@@ -105,6 +105,7 @@ def test_preview_spread_order(order_service, preview_request, preview_order_spre
     assert SPREAD_ORDER_PREVIEW_ID == str(response.preview_id)
 
 def test_place_order():
+    # TODO: Implement this test
     # Given an order that has been previewed
 
     # When a user makes place request to the service
@@ -113,6 +114,7 @@ def test_place_order():
     pass
 
 def test_cancel_placed_order():
+    # TODO: Implement this test
     # Given an order that has been placed
 
     # When a user cancels that order
@@ -122,9 +124,11 @@ def test_cancel_placed_order():
     pass
 
 def test_modify_order_preview():
+    # TODO: Implement this test
     pass
 
 def test_place_modified_order():
+    # TODO: Implement this test
     pass
 
 def _read_input(input_file):

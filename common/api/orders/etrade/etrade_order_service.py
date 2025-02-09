@@ -1,4 +1,5 @@
 import json
+from time import sleep
 
 from common.api.orders.cancel_order_request import CancelOrderRequest
 from common.api.orders.cancel_order_response import CancelOrderResponse
@@ -6,9 +7,11 @@ from common.api.orders.etrade.converters.order_conversion_util import OrderConve
 from common.api.orders.etrade.etrade_order_response_message import ETradeOrderResponseMessage
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
+from common.api.orders.order_cancellation_message import OrderCancellationMessage
 from common.api.orders.order_list_request import ListOrdersRequest
 from common.api.orders.order_list_response import ListOrdersResponse
 from common.api.orders.order_metadata import OrderMetadata
+from common.api.orders.order_placement_message import OrderPlacementMessage
 from common.api.orders.order_preview import OrderPreview
 from common.api.orders.order_service import OrderService
 from common.api.orders.place_modify_order_request import PlaceModifyOrderRequest
@@ -19,6 +22,7 @@ from common.api.orders.preview_modify_order_request import PreviewModifyOrderReq
 from common.api.orders.preview_modify_order_response import PreviewModifyOrderResponse
 from common.api.orders.preview_order_request import PreviewOrderRequest
 from common.api.orders.preview_order_response import PreviewOrderResponse
+from common.api.request_status import RequestStatus
 from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.finance.amount import Amount
 from common.order.order import Order
@@ -26,6 +30,12 @@ from common.order.order_status import OrderStatus
 from common.order.order_type import OrderType
 from common.order.placed_order import PlacedOrder
 
+NOT_ENOUGH_SHARES_MSG_PORTION = "We did not find enough available shares of this security in your account"
+DEFAULT_RETRY_SLEEP_SECONDS = 10
+DEFAULT_NUM_RETRIES = 3
+
+PARTIAL_EXECUTED_CODE = 167
+ORDER_EXECUTED_OR_REJECTED_CODE = 5001
 
 class ETradeOrderService(OrderService):
     def __init__(self, connector: ETradeConnector):
@@ -84,7 +94,7 @@ class ETradeOrderService(OrderService):
         url = self.base_url + path
         response = self.session.put(url, header_auth=True, headers=headers, data=payload)
         print(response)
-        return ETradeOrderService._parse_cancel_order_response(response)
+        return ETradeOrderService._parse_cancel_order_response(response, order_id)
 
     def preview_modify_order(self, preview_modify_order_request: PreviewModifyOrderRequest) -> PreviewModifyOrderResponse:
         order_metadata: OrderMetadata = preview_modify_order_request.order_metadata
@@ -101,10 +111,10 @@ class ETradeOrderService(OrderService):
         payload = ETradeOrderService._build_preview_order_xml(new_order, order_type, client_order_id)
 
         url = self.base_url + path
-        response = self.session.put(url, header_auth=True, headers=headers, data=payload)
-        return ETradeOrderService._parse_preview_order_response(response, order_metadata, order_id_to_modify)
+        return self._preview_order_resiliently(url, headers, payload, order_metadata)
 
     def preview_order(self, preview_order_request: PreviewOrderRequest) -> PreviewOrderResponse:
+        num_retries = 3
         order_metadata = preview_order_request.order_metadata
         order_type = order_metadata.order_type
         account_id = order_metadata.account_id
@@ -116,9 +126,29 @@ class ETradeOrderService(OrderService):
         payload = ETradeOrderService._build_preview_order_xml(preview_order_request.order, order_type, client_order_id)
 
         url = self.base_url + path
-        response = self.session.post(url, header_auth=True, headers=headers, data=payload)
+        return self._preview_order_resiliently(url, headers, payload, order_metadata)
 
-        return ETradeOrderService._parse_preview_order_response(response, order_metadata)
+    def _preview_order_resiliently(self, url: object, headers: object, payload: object, order_metadata: object, previous_order_id = None,
+                                   num_retries: int = DEFAULT_NUM_RETRIES) -> PreviewOrderResponse:
+        if num_retries < 0:
+            raise Exception(f"Retry count must not be negative! - {num_retries} provided")
+        response = self.session.post(url, header_auth=True, headers=headers, data=payload)
+        preview_order_response: PreviewOrderResponse = ETradeOrderService._parse_preview_order_response(response, order_metadata, previous_order_id)
+        while num_retries:
+            if preview_order_response.request_status == RequestStatus.FAILURE_DO_NOT_RETRY:
+                raise Exception(f"Order not previewable - please fix {preview_order_response.order_message}")
+            if preview_order_response.request_status == RequestStatus.FAILURE_RETRY_SUGGESTED:
+                print(f"Sleeping {DEFAULT_RETRY_SLEEP_SECONDS} before retrying")
+                sleep(DEFAULT_RETRY_SLEEP_SECONDS)
+
+                response = self.session.post(url, header_auth=True, headers=headers, data=payload)
+                preview_order_response = ETradeOrderService._parse_preview_order_response(response, order_metadata)
+                num_retries -= 1
+            if preview_order_response.request_status == RequestStatus.SUCCESS:
+                return preview_order_response
+
+        preview_order_response.request_status = RequestStatus.FAILURE_RETRIES_EXHAUSTED
+        return preview_order_response
 
     def place_modify_order(self, place_modify_order_request: PlaceModifyOrderRequest) -> PlaceModifyOrderResponse:
         order_metadata = place_modify_order_request.order_metadata
@@ -228,8 +258,15 @@ class ETradeOrderService(OrderService):
         else:
             return PlaceOrderResponse(order_metadata, preview_id, order_id, order, messages)
 
-    def _parse_cancel_order_response(input)-> CancelOrderResponse:
+    @staticmethod
+    def _parse_cancel_order_response(input, order_id:str)-> CancelOrderResponse:
         data = json.loads(input.text)
+        if "CancelOrderResponse" not in data:
+            print("There was no cancel order response!")
+            error = data['Error']
+            code = error['code']
+            message = error['message']
+            return CancelOrderResponse(order_id, None, [OrderCancellationMessage(code, message)], request_status=RequestStatus.OPERATION_FAILED_BUT_NO_LONGER_REQUIRED)
         cancel_order_response = data["CancelOrderResponse"]
 
         order_id = cancel_order_response["orderId"]
@@ -247,6 +284,26 @@ class ETradeOrderService(OrderService):
     @staticmethod
     def _parse_preview_order_response(response, order_metadata: OrderMetadata, previous_order_id=None)-> PreviewOrderResponse:
         data = json.loads(response.text)
+        request_status = RequestStatus.SUCCESS
+        if "PreviewOrderResponse" not in data:
+            if 'Error' in data:
+                error = data['Error']
+                code = error['code'] if 'code' in error else None
+                message = error['message'] if 'message' in error else None
+
+                order_placement_message: OrderPlacementMessage = ETradeOrderResponseMessage(code, description=message)
+
+                if NOT_ENOUGH_SHARES_MSG_PORTION in message or code == PARTIAL_EXECUTED_CODE:
+                    request_status = RequestStatus.FAILURE_RETRY_SUGGESTED
+                else:
+                    request_status = RequestStatus.FAILURE_DO_NOT_RETRY
+                if previous_order_id:
+                    return PreviewModifyOrderResponse(order_metadata, None, previous_order_id, None, request_status=request_status, order_message=order_placement_message)
+                else:
+                    return PreviewOrderResponse(order_metadata, None, None, request_status=request_status, order_message=order_placement_message)
+            else:
+                request_status = RequestStatus.FAILURE_DO_NOT_RETRY
+
         preview_order_response = data["PreviewOrderResponse"]
         preview_ids: list[dict[str:str]] = preview_order_response["PreviewIds"]
         orders: list[dict] = preview_order_response["Order"]
@@ -262,9 +319,9 @@ class ETradeOrderService(OrderService):
 
         # how to check if it replaces order
         if previous_order_id:
-            return PreviewModifyOrderResponse(order_metadata, preview_id, previous_order_id, order_preview)
+            return PreviewModifyOrderResponse(order_metadata, preview_id, previous_order_id, order_preview, request_status=request_status)
         else:
-            return PreviewOrderResponse(order_metadata, preview_id, order_preview)
+            return PreviewOrderResponse(order_metadata, preview_id, order_preview, request_status=request_status)
 
     @staticmethod
     def _parse_order_list_response(response, account_id) -> list[PlacedOrder]:

@@ -15,8 +15,8 @@ class TradeExecutionUtil:
     # This would be necessary to establish a first price for the order. Other issue is it wouldn't adjust for very wide spreads
     def get_market_price(order: Order, quote_service: QuoteService, adjust_excessive_spreads=True) -> Price:
         mark_to_market_price: float = 0
-        best_price: float = 0
-        worst_price: float = 0
+        best_value: float = 0
+        worst_value: float = 0
 
         for order_line in order.order_lines:
             get_tradable_request: GetTradableRequest = GetTradableRequest(order_line.tradable)
@@ -29,23 +29,23 @@ class TradeExecutionUtil:
                 current_price.ask = ADJUSTED_NO_BIDS_WIDE_SPREAD_ASK
 
             if Action.is_long(order_line.action):
-                worst_price -= current_price.bid * quantity
-                best_price -= current_price.ask * quantity
+                worst_value -= current_price.bid * quantity
+                best_value -= current_price.ask * quantity
 
                 mark_to_market_price -= get_tradable_response.current_price.mark
             else:
-                worst_price += current_price.ask * quantity
-                best_price += current_price.bid * quantity
+                worst_value += current_price.ask * quantity
+                best_value += current_price.bid * quantity
 
                 mark_to_market_price += get_tradable_response.current_price.mark
 
         # This is not obvious and quite surprising. In cases where there's a credit, bid is the lower credit, ask is the higher credit.
         # Where there is at least one debit, the higher price is the bid and the lower is the ask
-        if best_price >= 0 and worst_price >= 0:
-            lowest_price = best_price
-            highest_price = worst_price
+        if best_value >= 0 and worst_value >= 0:
+            lower = best_value
+            upper = worst_value
         else:
-            lowest_price = max(best_price, worst_price)
-            highest_price = min(best_price, worst_price)
+            lower = max(best_value, worst_value)
+            upper = min(best_value, worst_value)
 
-        return Price(lowest_price, highest_price)
+        return Price(lower, upper)

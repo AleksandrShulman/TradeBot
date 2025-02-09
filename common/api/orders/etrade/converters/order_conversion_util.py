@@ -53,13 +53,15 @@ class OrderConversionUtil:
         ratio = order_detail['ratio'] if 'ratio' in order_detail else None
 
         # TODO: These seem to be zero .. not sure if that's an after-hours issue, or something more fundamental
-        mark_price = order_detail['netPrice']
-        bid_price = order_detail['netBid']
-        ask_price = order_detail['netAsk']
+        # TODO: This is very odd, but these actually come back in the API was negative values when they should be positive.
+        # The order is for a credit, and E*Trade reports the range in this example as positive for both bid and ask
+        mark_price:float = order_detail['netPrice'] * -1
+        bid_price = order_detail['netBid'] * -1
+        ask_price = order_detail['netAsk'] * -1
 
-        order_market_price = Price(bid_price, ask_price, mark_price)
+        current_market_price: Price = Price(bid_price, ask_price, mark_price)
 
-        placed_order_details = PlacedOrderDetails(account_id, order_id, status, order_placed_time, order_market_price, market_session, replaces_order_id)
+        placed_order_details = PlacedOrderDetails(account_id, order_id, status, order_placed_time, current_market_price, market_session, replaces_order_id)
 
         return PlacedOrder(order, placed_order_details)
 
@@ -130,7 +132,7 @@ class OrderConversionUtil:
         elif type(order.expiry) == GoodForSixtyDays:
             order_term = "GOOD_TILL_DATE"
         elif type(order.expiry) == GoodUntilCancelled:
-            order_term = "GOOD_UNTIL_CANCELLED"
+            order_term = "GOOD_UNTIL_CANCEL"
         elif type(order.expiry) == FillOrKill:
             order_term = "FILL_OR_KILL"
 

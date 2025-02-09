@@ -2,7 +2,6 @@ from common.finance.equity import Equity
 from common.finance.option_type import OptionType
 from common.finance.options.option_order import OptionOrder
 from common.finance.options.option_order_line import OptionOrderLine
-from common.finance.options.spread import Spread
 from common.order.action import Action
 from common.order.order_price import OrderPrice
 from common.order.order_type import OrderType

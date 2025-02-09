@@ -8,17 +8,19 @@ import pytest
 from common.api.orders.OrderUtil import OrderUtil
 from common.api.orders.cancel_order_request import CancelOrderRequest
 from common.api.orders.cancel_order_response import CancelOrderResponse
-from common.api.orders.etrade.etrade_order_service import ETradeOrderService
+from common.api.orders.etrade.etrade_order_service import ETradeOrderService, ORDER_EXECUTED_OR_REJECTED_CODE
 from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_metadata import OrderMetadata
 from common.api.orders.order_service import OrderService
 from common.api.orders.place_order_response import PlaceOrderResponse
 from common.api.orders.preview_order_request import PreviewOrderRequest
+from common.api.request_status import RequestStatus
 from common.api.test.orders.order_test_util import OrderTestUtil
 from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.finance.amount import Amount
 from common.finance.equity import Equity
+from common.finance.price import Price
 from common.order.action import Action
 from common.order.order_price_type import OrderPriceType
 from common.order.order_status import OrderStatus
@@ -28,7 +30,7 @@ from quotes.quote_service import QuoteService
 from tex.tactics.incremental_price_delta_execution_tactic import IncrementalPriceDeltaExecutionTactic
 from tex.trade_execution_util import TradeExecutionUtil
 
-DEFAULT_WAIT: datetime.timedelta = datetime.timedelta(seconds=5)
+DEFAULT_WAIT: datetime.timedelta = datetime.timedelta(seconds=8)
 DEFAULT_INITIAL_DELTA = Amount(0, 25)
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__),'../../common/api/scripts/', 'integration_test_properties.ini')
@@ -41,17 +43,29 @@ SFIX = Equity("SFIX", "STITCH FIX INC COM CL A")
 
 ZERO = Amount(0,0)
 
+TRADE_IN_PROGRESS_ERROR_CODE = 5001
+TRADE_IN_PROGRESS_MSG = 'currently being executed or rejected'
+
 @pytest.fixture
 def connector():
+    return get_connector()
+
+def get_connector():
     return ETradeConnector()
 
 @pytest.fixture
 def quote_service(connector):
+    return get_quote_service(connector)
+
+def get_quote_service(connector):
     q: QuoteService = ETradeQuoteService(connector)
     return q
 
 @pytest.fixture
 def order_service(connector):
+    return get_order_service(connector)
+
+def get_order_service(connector):
     o: OrderService = ETradeOrderService(connector)
     return o
 
@@ -64,11 +78,11 @@ def test_lower_until_executed(account_id: str, quote_service: QuoteService, orde
     # The pattern is we'll put in the order, to get a sense of the actual price, once the response returns. From there, we'll keep getting new prices until it's clsoed.
     # Get a sense of what it may be worth
     order = OrderTestUtil.build_equity_order(equity=SFIX, action=Action.BUY)
-    order_market_price: Amount = TradeExecutionUtil.get_market_price(order, quote_service)
+    order_market_price: Price = TradeExecutionUtil.get_market_price(order, quote_service)
     print(f"Security currently at: {order_market_price}")
 
     # Find a price that's reasonable
-    potential_order_price: Amount = order_market_price + DEFAULT_INITIAL_DELTA if order.order_price.order_price_type is OrderPriceType.NET_CREDIT else order_market_price - DEFAULT_INITIAL_DELTA
+    potential_order_price: Amount = Amount.from_float(order_market_price.mark) + DEFAULT_INITIAL_DELTA if order.order_price.order_price_type is OrderPriceType.NET_CREDIT else Amount.from_float(order_market_price.mark) - DEFAULT_INITIAL_DELTA
     order.order_price.price = potential_order_price
 
     client_order_id = OrderUtil.generate_random_client_order_id()
@@ -92,16 +106,28 @@ def adjust_order_until_executed(account_id: str, order_id: str, order_service: O
             print("Cancelling old order")
             cancel_order_request: CancelOrderRequest = CancelOrderRequest(account_id, order_id)
             response: CancelOrderResponse = order_service.cancel_order(cancel_order_request)
-            print(f"Cancelled old order {response.order_id}")
+            if response.request_status.is_permanent_failure():
+                if response.messages:
+                    message = response.messages[0]
+                    if message.code == TRADE_IN_PROGRESS_ERROR_CODE and TRADE_IN_PROGRESS_MSG in message.message:
+                        print(f"Order {order_id} executed!")
+                        return
+                    raise Exception(f"Order cancellation for {order_id} failed with message: {message}")
+                else:
+                    raise Exception(f"Order cancellation for {order_id}.")
+            else:
+                print(f"Cancelled old order {response.order_id}")
 
             new_price, wait_period = IncrementalPriceDeltaExecutionTactic.new_price(placed_order, quote_service)
-            order.order_price.price = new_price
+            order.order_price.price = new_price.price
+
             order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, OrderUtil.generate_random_client_order_id())
             preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
 
             # place the order
             print("Submitted new order")
             response: PlaceOrderResponse = order_service.preview_and_place_order(preview_order_request)
+
             print(f"New order is {response.order_id}")
             order_id = response.order_id
 
@@ -114,3 +140,7 @@ def adjust_order_until_executed(account_id: str, order_id: str, order_service: O
 
             print(f"Sleeping {wait_period} seconds before adding new order")
             sleep(wait_period)
+
+if __name__ == "__main__":
+    connector = get_connector()
+    adjust_order_until_executed("<REDACTED>","83882", get_order_service(connector), get_quote_service(connector))

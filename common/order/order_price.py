@@ -12,6 +12,14 @@ class OrderPrice:
 
         self.price: Amount = price
 
+    def to_amount(self):
+        if self.order_price_type == OrderPriceType.NET_EVEN:
+            return ZERO
+        if self.order_price_type == OrderPriceType.NET_CREDIT:
+            return self.price
+        if self.order_price_type == OrderPriceType.NET_DEBIT:
+            return self.price * -1
+
     def __str__(self):
         return f"{self.order_price_type.name}: {self.price}"
 
