@@ -6,10 +6,6 @@ from common.order.order_type import OrderType
 
 
 class OrderAnalysis(ABC):
-
-    def get_value_at_expiry_function(self) -> Callable[[Amount], Amount]:
-        pass
-
     def get_order_type(self) -> OrderType:
         pass
 

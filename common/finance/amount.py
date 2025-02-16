@@ -56,7 +56,9 @@ class Amount:
         new_whole: int = math.floor(total / 100)
         new_part: int = total % 100
 
-        return Amount(new_whole, new_part, self.currency)
+        negative: bool = True if new_whole < 0 else False
+
+        return Amount(abs(new_whole), new_part, self.currency, negative)
 
     def __sub__(self, other):
         if other.currency != self.currency:

@@ -14,7 +14,7 @@ from tex.tactics.execution_tactic import ExecutionTactic
 from tex.trade_execution_util import TradeExecutionUtil
 
 GAP_REDUCTION_RATIO = 1/3
-DEFAULT_WAIT_SEC = 10
+DEFAULT_WAIT_SEC = 12
 VERY_CLOSE_TO_MARKET_PRICE_WAIT = 30
 
 class IncrementalPriceDeltaExecutionTactic(ExecutionTactic):

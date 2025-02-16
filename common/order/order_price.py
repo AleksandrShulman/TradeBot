@@ -12,7 +12,7 @@ class OrderPrice:
 
         self.price: Amount = price
 
-    def to_amount(self):
+    def to_amount(self)->Amount:
         if self.order_price_type == OrderPriceType.NET_EVEN:
             return ZERO
         if self.order_price_type == OrderPriceType.NET_CREDIT:
