@@ -68,6 +68,15 @@ def test_divide_two_amounts():
 
     assert a3 == 1.68
 
+def test_add_negative_number():
+    input_1 = Amount(0,0)
+    input_2 = Amount(3, 84, negative=True)
+
+    expected_result = Amount(3, 84, negative=True)
+
+    assert input_1 + input_2 == expected_result
+    assert input_2 + input_1 == expected_result
+
 def test_abs():
     assert abs(Amount(1, 4, negative=False)) == abs(Amount(1,4, negative=True))
 

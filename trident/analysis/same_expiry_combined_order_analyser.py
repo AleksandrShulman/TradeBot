@@ -15,9 +15,20 @@ class SameDayExpiryCombinedOrderAnalyser:
         self.equity = equity
         self.orders: list[Order] = orders
 
+        expiries = set()
+
         current_order_price: Amount = Amount(0,0)
         for order in orders:
-            current_order_price += order.order_price.to_amount()
+            order_amt: Amount = order.order_price.to_amount()
+            current_order_price += order_amt
+            for order_line in order.order_lines:
+                if isinstance(order_line.tradable, Option):
+                    option: Option = order_line.tradable
+                    expiries.add(option.expiry)
+
+        if len(expiries) != 1:
+            raise Exception("All expiry dates must be the same")
+
         self.order_price = current_order_price
 
     def get_margin_equity_required(self) -> Amount:
@@ -35,7 +46,7 @@ class SameDayExpiryCombinedOrderAnalyser:
     def get_pl_for_given_price_at_expiry(self, at_price: float) -> Amount:
         value_at_price: Amount = self.get_value_for_given_price_at_expiry(at_price)
         order_price_amt: Amount = self.order_price * 100
-        return_value = order_price_amt + value_at_price
+        return_value = value_at_price + order_price_amt
         return return_value
 
     # This assumes that all options have the same expiry
@@ -63,7 +74,7 @@ class SameDayExpiryCombinedOrderAnalyser:
         for order_line in order_lines:
             quantity = order_line.quantity
             value = at_price * quantity
-            iv += quantity * value
+            iv += value
 
         return iv
 

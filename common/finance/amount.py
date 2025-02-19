@@ -53,10 +53,10 @@ class Amount:
 
         total = self.in_smallest_denomination() + other.in_smallest_denomination()
 
-        new_whole: int = math.floor(total / 100)
-        new_part: int = total % 100
+        new_whole: int = math.floor(abs(total) / 100)
+        new_part: int = abs(total) % 100
 
-        negative: bool = True if new_whole < 0 else False
+        negative: bool = True if total < 0 else False
 
         return Amount(abs(new_whole), new_part, self.currency, negative)
 
