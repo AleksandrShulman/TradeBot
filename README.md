@@ -10,9 +10,9 @@ Use this library to execute trading strategies across various exchanges, includi
 
 Trade Identifier Service - service for identifying trading opportunities by scanning markets using user-supplied strategies.
 
-### Tex
+### Oex
 
-Trade Executor Service - service for executing user-supplied trades
+Order Executor Service - service for executing user-supplied orders
 
 ### Quotes
 

@@ -8,7 +8,7 @@ from common.order.order import Order
 from common.order.order_price import OrderPrice
 from common.order.order_price_type import OrderPriceType
 from common.order.placed_order import PlacedOrder
-from tex.scripts.trade_until_executed import order_service
+from oex.scripts.trade_until_executed import order_service
 
 
 class AdjustUntilExecuted():

@@ -4,6 +4,7 @@ from datetime import datetime
 
 from click import option
 
+from common.api.finance.greeks.greeks import Greeks
 from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.finance.amount import Amount
 from common.finance.chain import Chain
@@ -156,7 +157,26 @@ class ETradeQuoteService(QuoteService):
                         volume = quote["All"]["totalVolume"]
                     else:
                         volume = None
-                return GetTradableResponse(tradable, response_time, Price(bid, ask), volume)
+                if quote is not None and "option" in quote:
+                    option_quote_details = quote["option"]
+                    if "optionGreeks" in option_quote_details:
+                        option_greeks = option_quote_details["optionGreeks"]
+                        rho = option_greeks["rho"]
+                        vega = option_greeks["vega"]
+                        theta = option_greeks["theta"]
+                        delta = option_greeks["delta"]
+                        gamma = option_greeks["gamma"]
+                        iv = option_greeks["iv"]
+                        # This one is curious .. shouldn't this be an amount or price?
+                        current_value: bool = option_greeks["currentValue"]
+                        greeks = Greeks(delta, gamma, theta, vega, rho, iv, current_value)
+                    else:
+                        print(f"Warn - greeks not present in response for {tradable}")
+                        greeks = None
+                else:
+                    greeks = None
+
+                return GetTradableResponse(tradable, response_time, Price(bid, ask), volume, greeks)
             else:
                 # Handle errors
                 if data is not None and 'QuoteResponse' in data and 'Messages' in data["QuoteResponse"] \

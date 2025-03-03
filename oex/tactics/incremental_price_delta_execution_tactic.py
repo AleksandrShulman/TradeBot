@@ -10,8 +10,8 @@ from common.order.order_price_type import OrderPriceType
 from common.order.order_type import OrderType
 from common.order.placed_order import PlacedOrder
 from quotes.quote_service import QuoteService
-from tex.tactics.execution_tactic import ExecutionTactic
-from tex.trade_execution_util import TradeExecutionUtil
+from oex.tactics.execution_tactic import ExecutionTactic
+from oex.trade_execution_util import TradeExecutionUtil
 
 GAP_REDUCTION_RATIO = 1/3
 DEFAULT_WAIT_SEC = 12

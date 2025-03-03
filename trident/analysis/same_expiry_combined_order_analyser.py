@@ -38,9 +38,11 @@ class SameDayExpiryCombinedOrderAnalyser:
         return Amount(0, 0)
 
     def get_max_gain(self):
+        # TODO: Implement this
         return Amount(0,0)
 
     def get_max_loss(self):
+        # TODO: Implement this
         return Amount(0,0)
 
     def get_pl_for_given_price_at_expiry(self, at_price: float) -> Amount:

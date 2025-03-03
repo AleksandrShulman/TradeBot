@@ -20,7 +20,7 @@ from common.order.order_price_type import OrderPriceType
 from quotes.api.get_tradable_request import GetTradableRequest
 from quotes.api.get_tradable_response import GetTradableResponse
 from quotes.quote_service import QuoteService
-from tex.trade_execution_util import TradeExecutionUtil
+from oex.trade_execution_util import TradeExecutionUtil
 
 equity = Equity("GE", "General Electric")
 

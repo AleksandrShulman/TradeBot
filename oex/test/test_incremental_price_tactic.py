@@ -17,7 +17,7 @@ from common.order.order_price_type import OrderPriceType
 from common.order.order_status import OrderStatus
 from common.order.placed_order import PlacedOrder
 from common.order.placed_order_details import PlacedOrderDetails
-from tex.tactics.incremental_price_delta_execution_tactic import IncrementalPriceDeltaExecutionTactic
+from oex.tactics.incremental_price_delta_execution_tactic import IncrementalPriceDeltaExecutionTactic
 
 
 ORDER_PRICE_EXACTLY_200 = Amount(200, 0)

@@ -27,8 +27,8 @@ from common.order.order_status import OrderStatus
 from common.order.order_type import OrderType
 from quotes.etrade.etrade_quote_service import ETradeQuoteService
 from quotes.quote_service import QuoteService
-from tex.tactics.incremental_price_delta_execution_tactic import IncrementalPriceDeltaExecutionTactic
-from tex.trade_execution_util import TradeExecutionUtil
+from oex.tactics.incremental_price_delta_execution_tactic import IncrementalPriceDeltaExecutionTactic
+from oex.trade_execution_util import TradeExecutionUtil
 
 DEFAULT_WAIT: datetime.timedelta = datetime.timedelta(seconds=8)
 DEFAULT_INITIAL_DELTA = Amount(0, 25)
@@ -143,4 +143,4 @@ def adjust_order_until_executed(account_id: str, order_id: str, order_service: O
 
 if __name__ == "__main__":
     connector = get_connector()
-    adjust_order_until_executed("1XRq48Mv_HUiP8xmEZRPnA","83923", get_order_service(connector), get_quote_service(connector))
+    adjust_order_until_executed("1XRq48Mv_HUiP8xmEZRPnA","84077", get_order_service(connector), get_quote_service(connector))
