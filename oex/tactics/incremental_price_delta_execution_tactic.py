@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from common.account.computed_balance import ZERO_AMOUNT
-from common.api.test.orders.order_test_util import DEFAULT_AMOUNT
 from common.finance.amount import Amount
 from common.finance.price import Price
 from common.order.action import Action
