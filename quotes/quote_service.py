@@ -1,6 +1,6 @@
 from abc import ABC
-from datetime import datetime
 
+from common.api.api_service import ApiService
 from common.exchange.connector import Connector
 from common.finance.option import Option
 from quotes.api.get_option_expire_dates_request import GetOptionExpireDatesRequest
@@ -11,10 +11,10 @@ from quotes.api.get_tradable_request import GetTradableRequest
 from quotes.api.get_tradable_response import GetTradableResponse
 
 
-class QuoteService(ABC):
+class QuoteService(ApiService):
 
     def __init__(self, connector: Connector):
-        self.connector = connector
+        super().__init__(connector)
 
     def get_tradable_quote(self, request: GetTradableRequest) -> GetTradableResponse:
         pass
