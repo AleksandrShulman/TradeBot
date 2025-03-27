@@ -42,7 +42,7 @@ class ETradeOrderService(OrderService):
         super().__init__(connector)
         self.session, self.base_url = self.connector.load_connection()
 
-    def list_orders(self, list_orders_request: ListOrdersRequest, exchange_specific_opts: dict[str, str]) -> ListOrdersResponse:
+    def list_orders(self, list_orders_request: ListOrdersRequest, exchange_specific_opts: dict[str, str]=None) -> ListOrdersResponse:
         account_id = list_orders_request.account_id
         path = f"/v1/accounts/{account_id}/orders.json"
         count = list_orders_request.count

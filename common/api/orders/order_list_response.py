@@ -14,3 +14,6 @@ class ListOrdersResponse(Response):
 
     def __repr__(self):
         return self.__str__()
+
+    def to_dict(self):
+        return { "order_list" : self.order_list}

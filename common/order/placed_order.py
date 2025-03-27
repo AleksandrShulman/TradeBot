@@ -10,3 +10,9 @@ class PlacedOrder:
 
     def get_order(self):
         return self.order
+
+    def to_dict(self):
+        return {
+            "order" : self.order,
+            "placed_order_details": self.placed_order_details
+    }

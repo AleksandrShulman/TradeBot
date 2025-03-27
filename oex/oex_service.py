@@ -1,21 +1,34 @@
-from flask import Flask
+from datetime import datetime
 
+from flask import Flask, jsonify
+from flask import request
+
+from common.api.encoding.custom_json_provider import CustomJSONProvider
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
 from common.api.orders.order_list_request import ListOrdersRequest
+from common.api.orders.order_list_response import ListOrdersResponse
 from common.api.orders.order_service import OrderService
 from common.exchange.connector import Connector
 from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.exchange.exchange_name import ExchangeName
+from common.order.order_status import OrderStatus
 from quotes.etrade.etrade_quote_service import ETradeQuoteService
 from quotes.quote_service import QuoteService
+
+JAN_1_2024 = datetime(2024,1,1).date()
+DEFAULT_START_DATE = JAN_1_2024
+DEFAULT_COUNT = 100
 
 
 class OexService:
 
     def __init__(self):
         self._app = Flask(OexService.__name__)
+        self._app.json_provider_class = CustomJSONProvider(self._app)  # Tell Flask to use the custom encoder
+        self._app.json = CustomJSONProvider(self._app)
         self._register_endpoints()
         self._obtain_credentials()
+        self._setup_exchange_services()
 
     @property
     def app(self) -> Flask:
@@ -28,23 +41,28 @@ class OexService:
     def _register_endpoints(self):
         self.app.add_url_rule(rule='/', endpoint='root', view_func=self.get_root, methods=['GET'])
         self.app.add_url_rule(rule='/health-check', endpoint='health-check', view_func=self.health_check, methods=['GET'])
-        self.app.add_url_rule(rule='/api/v1/<exchange>/orders', endpoint='list-orders', view_func=self.list_orders, methods=['GET'])
+        self.app.add_url_rule(rule='/api/v1/<exchange>/<account_id>/orders', endpoint='list-orders', view_func=self.list_orders, methods=['GET'])
 
     def _obtain_credentials(self):
-        self.connectors: dict[str, Connector] = dict()
-        etrade_connector: ETradeConnector = ETradeConnector().load_connection()
-        self.connectors["etrade"] = etrade_connector
+        self.connectors: dict[ExchangeName, Connector] = dict()
+        etrade_connector: ETradeConnector = ETradeConnector()
+        self.connectors[ExchangeName.ETRADE] = etrade_connector
 
     def _setup_exchange_services(self):
-        self.order_services: dict[str, OrderService] = dict()
-        self.quote_services: dict[str, QuoteService] = dict()
+        self.order_services: dict[ExchangeName, OrderService] = dict()
+        self.quote_services: dict[ExchangeName, QuoteService] = dict()
 
-        etrade_key: str = self.connectors[ExchangeName.ETRADE.value]
-        etrade_order_service = ETradeOrderService(etrade_key)
-        etrade_quote_service = ETradeQuoteService(etrade_key)
+        # E*Trade
+        etrade_key: ExchangeName = ExchangeName.ETRADE
+        etrade_connector: ETradeConnector = self.connectors[ExchangeName.ETRADE]
+        etrade_order_service = ETradeOrderService(etrade_connector)
+        etrade_quote_service = ETradeQuoteService(etrade_connector)
 
         self.order_services[etrade_key] = etrade_order_service
         self.quote_services[etrade_key] = etrade_quote_service
+
+        # TODO: Add for IKBR and Schwab
+
 
     def run(self, *args, **kwargs):
         self.app.run(*args, **kwargs)
@@ -57,12 +75,22 @@ class OexService:
     def get_root():
         return "OEX Service"
 
-    @staticmethod
-    def list_orders(self, exchange):
-        order_service: OrderService = self.order_services[exchange]
-        list_order_request = ListOrdersRequest()
-        order_service.list_orders()
-        return f"Getting orders for {exchange}"
+
+    def list_orders(self, exchange: str, account_id: str):
+        args = request.args
+        status_str = args.get('status')
+        status = OrderStatus.ANY if not status_str else OrderStatus[status_str]
+        from_date = DEFAULT_START_DATE if not 'from_date' in args else datetime.datetime.strptime(args.get('from_date'), '%yyyy-mm-dd').date()
+        to_date = datetime.today().date() if not 'to_date' in args else datetime.datetime.strptime(args.get('to_date'), '%yyyy-mm-dd').date()
+
+        count = args.get('count') if 'count' in args else DEFAULT_COUNT
+
+        order_service: OrderService = self.order_services[ExchangeName[exchange.upper()]]
+        list_order_request = ListOrdersRequest(account_id, status, from_date, to_date, count)
+
+        resp: ListOrdersResponse = order_service.list_orders(list_order_request)
+
+        return jsonify(resp)
 
 if __name__ == "__main__":
     from waitress import serve
