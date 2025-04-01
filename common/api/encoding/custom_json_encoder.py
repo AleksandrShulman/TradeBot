@@ -2,14 +2,16 @@ import dataclasses
 import decimal
 
 import uuid
-from datetime import datetime, date
+from datetime import date
+from json import JSONEncoder
 
-from flask.json.provider import DefaultJSONProvider
 from werkzeug.http import http_date
 import typing as t
 
 from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_response import ListOrdersResponse
+from common.api.orders.order_metadata import OrderMetadata
+from common.api.orders.preview_order_request import PreviewOrderRequest
 from common.finance.amount import Amount
 from common.finance.equity import Equity
 from common.finance.option import Option
@@ -24,15 +26,27 @@ from common.order.placed_order import PlacedOrder
 from common.order.placed_order_details import PlacedOrderDetails
 
 
-class CustomJSONProvider(DefaultJSONProvider):
-    # TODO: Refactor so as to reference the method from CustomJsonEncoder instead of
-    # re-implementing it.
-    def default(self, o: t.Any) -> t.Any:
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, o):
         if isinstance(o, date):
             return http_date(o)
 
         if isinstance(o, (decimal.Decimal, uuid.UUID)):
             return str(o)
+
+        if isinstance(o, (PreviewOrderRequest)):
+            return {
+                "order_metadata": o.order_metadata,
+                "order": o.order
+            }
+
+        if isinstance(o, (OrderMetadata)):
+            return {
+                "account_id" : o.account_id,
+                "order_type": str(o.order_type),
+                "client_order_id": o.client_order_id
+            }
 
         if isinstance(o, (ListOrdersResponse)):
             return {
@@ -46,14 +60,14 @@ class CustomJSONProvider(DefaultJSONProvider):
 
         if isinstance(o, (ExecutedOrder)):
             return {
-                "order" : o.order,
+                "order": o.order,
                 "execution_details": o.execution_details
             }
 
         if isinstance(o, (ExecutionOrderDetails)):
             return {
                 "order_value": o.order_value,
-                "executed_time" : o.executed_time
+                "executed_time": o.executed_time
             }
 
         if isinstance(o, (Amount)):
@@ -100,7 +114,7 @@ class CustomJSONProvider(DefaultJSONProvider):
 
         if isinstance(o, (Equity)):
             return {
-                "ticker" : o.ticker,
+                "ticker": o.ticker,
                 "company_name": o.company_name
             }
 
@@ -136,4 +150,3 @@ class CustomJSONProvider(DefaultJSONProvider):
             return str(o.__html__())
 
         raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
-

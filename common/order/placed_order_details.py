@@ -1,7 +1,6 @@
 import datetime
 
 from common.exchange.market_session import MarketSession
-from common.finance.amount import Amount
 from common.finance.price import Price
 from common.order.order_status import OrderStatus
 

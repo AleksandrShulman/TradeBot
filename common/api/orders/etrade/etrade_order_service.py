@@ -114,7 +114,6 @@ class ETradeOrderService(OrderService):
         return self._preview_order_resiliently(url, headers, payload, order_metadata)
 
     def preview_order(self, preview_order_request: PreviewOrderRequest) -> PreviewOrderResponse:
-        num_retries = 3
         order_metadata = preview_order_request.order_metadata
         order_type = order_metadata.order_type
         account_id = order_metadata.account_id

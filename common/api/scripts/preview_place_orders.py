@@ -1,10 +1,15 @@
 import configparser
 import copy
+import json
 import os
 from datetime import datetime
 
+import jsonpickle
 import pytest
+from flask import jsonify
 
+from common.api.encoding.custom_json_encoder import CustomJSONEncoder
+from common.api.encoding.custom_json_provider import CustomJSONProvider
 from common.api.orders.OrderUtil import OrderUtil
 from common.api.orders.cancel_order_request import CancelOrderRequest
 from common.api.orders.cancel_order_response import CancelOrderResponse
@@ -55,6 +60,42 @@ def order_service():
     connector: ETradeConnector = ETradeConnector()
     o: OrderService = ETradeOrderService(connector)
     return o
+
+
+def test_equity_order_for_preview_using_custom_json_encoder(order_service: OrderService, account_key: str):
+    order_type: OrderType = OrderType.EQ
+    account_id = account_key
+    client_order_id = OrderUtil.generate_random_client_order_id()
+    order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, client_order_id)
+
+    order = OrderTestUtil.build_equity_order()
+
+    preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
+
+    result = json.dumps(preview_order_request, cls=CustomJSONEncoder)
+    print(result)
+
+    as_json = json.loads(result)
+    assert as_json["order_metadata"]["client_order_id"] == client_order_id
+
+
+def test_equity_order_for_preview_using_json_pickle(order_service: OrderService, account_key: str):
+    order_type: OrderType = OrderType.EQ
+    account_id = account_key
+    client_order_id = OrderUtil.generate_random_client_order_id()
+    order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, client_order_id)
+
+    order = OrderTestUtil.build_equity_order()
+
+    preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
+
+    result = jsonpickle.encode(preview_order_request)
+    print(result)
+
+    decoded: PreviewOrderRequest = jsonpickle.decode(result)
+    assert decoded.order_metadata.client_order_id == client_order_id
+
+
 
 def test_equity_order_for_preview_and_place(order_service: OrderService, account_key: str):
     order_type: OrderType = OrderType.EQ

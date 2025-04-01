@@ -1,10 +1,13 @@
 from datetime import datetime
 
-from flask import Flask, jsonify
+import jsonpickle
+from flask import Flask, jsonify, make_response
 from flask import request
 
 from common.api.encoding.custom_json_provider import CustomJSONProvider
 from common.api.orders.etrade.etrade_order_service import ETradeOrderService
+from common.api.orders.get_order_request import GetOrderRequest
+from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_request import ListOrdersRequest
 from common.api.orders.order_list_response import ListOrdersResponse
 from common.api.orders.order_service import OrderService
@@ -42,6 +45,18 @@ class OexService:
         self.app.add_url_rule(rule='/', endpoint='root', view_func=self.get_root, methods=['GET'])
         self.app.add_url_rule(rule='/health-check', endpoint='health-check', view_func=self.health_check, methods=['GET'])
         self.app.add_url_rule(rule='/api/v1/<exchange>/<account_id>/orders', endpoint='list-orders', view_func=self.list_orders, methods=['GET'])
+        self.app.add_url_rule(rule='/api/v1/<exchange>/<account_id>/orders/<order_id>', endpoint='get-order',
+                              view_func=self.get_order, methods=['GET'])
+
+        self.app.add_url_rule(rule='/api/v1/<exchange>/<account_id>/orders/preview', endpoint='preview-order',
+                              view_func=self.preview_order, methods=['POST'])
+
+        self.app.add_url_rule(rule='/api/v1/<exchange>/<account_id>/orders/preview/<preview_id>', endpoint='place-order',
+                              view_func=self.place_order, methods=['POST'])
+
+
+        self.app.add_url_rule(rule='/api/v1/<exchange>/<account_id>/orders/preview_and_place', endpoint='preview-and-place-order',
+                              view_func=self.preview_and_place_order, methods=['POST'])
 
     def _obtain_credentials(self):
         self.connectors: dict[ExchangeName, Connector] = dict()
@@ -91,6 +106,44 @@ class OexService:
         resp: ListOrdersResponse = order_service.list_orders(list_order_request)
 
         return jsonify(resp)
+
+    def get_order(self, exchange: str, account_id: str, order_id: str):
+        if not order_id:
+            # TODO: Factor this out
+            # TODO: Put HTTP response codes in an eum
+            resp = make_response(f"Order {order_id} not found", 400)
+            resp.headers['X-Something'] = 'A value'
+            return resp
+
+        order_service: OrderService = self.order_services[ExchangeName[exchange.upper()]]
+        get_order_request = GetOrderRequest(account_id, order_id)
+
+        resp: GetOrderResponse = order_service.get_order(get_order_request)
+
+        return jsonify(resp)
+
+    def preview_order(self, exchange, account_id: str):
+        content_type = request.headers.get('Content-Type')
+        if (content_type != 'application/json'):
+            return 'Content-Type not supported!'
+
+        json: dict = request.json
+        preview_order_request = jsonpickle.decode(json)
+
+        return jsonify([])
+        pass
+
+
+    def place_order(self, exchange, account_id: str, preview_id: str):
+        place_order_request_body: dict = request.form
+        return jsonify([])
+        pass
+
+
+    def preview_and_place_order(self, exchange, account_id: str, preview_id: str):
+        preview_order_request_body: dict = request.form
+        return jsonify([])
+        pass
 
 if __name__ == "__main__":
     from waitress import serve
