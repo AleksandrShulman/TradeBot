@@ -4,12 +4,12 @@ from common.order.tradable_type import TradableType
 
 
 class Equity(Tradable):
-    def __init__(self, ticker, company_name:str=None):
-        if not ticker:
-            raise Exception(f"Inputs ({ticker} not valid")
-        self.ticker = ticker
-        self.company_name = company_name
-        self.price: Price = None
+    ticker: str
+    company_name: str
+    price: Price = None
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def set_price(self, price: Price):
         self.price = price

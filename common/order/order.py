@@ -1,5 +1,7 @@
 import copy
 
+from pydantic import BaseModel
+
 from common.finance.option import Option
 from common.finance.option_type import OptionType
 from common.order.action import Action
@@ -9,20 +11,13 @@ from common.order.order_price import OrderPrice
 from common.order.order_type import OrderType
 from common.order.tradable_type import TradableType
 
-
 # TODO: Add ratio
-class Order:
-    def __init__(self, order_id: str, expiry: OrderExpiry, order_lines: list[OrderLine],
-                 order_price: OrderPrice):
-        # This is the Local Order Id.
-        self.order_id: str = order_id
-        self.expiry: OrderExpiry = expiry
-        self.order_lines: list[OrderLine] = order_lines
-        self.order_price: OrderPrice = order_price
+class Order(BaseModel):
+    expiry: OrderExpiry
+    order_lines: list[OrderLine]
+    order_price: OrderPrice
 
     def __eq__(self, other):
-        if self.order_id != other.order_id:
-            return False
         if self.expiry != other.expiry:
             return False
         if self.order_price != other.order_price:

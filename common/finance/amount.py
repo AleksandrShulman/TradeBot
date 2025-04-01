@@ -1,15 +1,20 @@
 import math
 
+from pydantic import BaseModel
+
 from common.finance.currency import Currency
 
 
-class Amount:
-    def __init__(self, whole: int, part: int, currency: Currency = Currency.US_DOLLARS, negative=False):
-        self.whole: int = whole
-        self.part: int = part
-        self.currency: Currency = currency
-        self.negative: bool = negative
+class Amount(BaseModel):
+    whole: int
+    part: int
+    currency: Currency = Currency.US_DOLLARS
+    negative: bool = False
 
+
+    @staticmethod
+    def __validate__(whole, part):
+        # TODO: Use pydantic validation -- this is the basic logic though
         if whole < 0 or part < 0:
             raise Exception("Please only include magnitude, for part and whole. Sign set using negative field")
         if part > 99:
@@ -145,4 +150,4 @@ class Amount:
         return hash(str(self.whole) + str(self.part) + str(self.currency))
 
 
-ZERO = Amount(0,0)
+ZERO = Amount(whole=0,part=0)

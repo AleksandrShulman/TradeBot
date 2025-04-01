@@ -1,4 +1,5 @@
 import datetime
+from locale import currency
 
 from common.finance.amount import Amount
 from common.finance.currency import Currency
@@ -13,12 +14,12 @@ ticker = "GE"
 type = OptionType.PUT
 type2 = OptionType.CALL
 
-strike = Amount(165, 0, Currency.US_DOLLARS)
+strike = Amount(whole=165, part=0, currency=Currency.US_DOLLARS)
 
 expiry = datetime.datetime(2025, 3, 21).date()
 expiry2 = datetime.datetime.today().date()
 
-price = Amount(0, 87, Currency.US_DOLLARS)
+price = Amount(whole=0, part=87, currency=Currency.US_DOLLARS)
 style = ExerciseStyle.AMERICAN
 
 
@@ -39,4 +40,4 @@ def get_sample_option():
 
 
 def get_sample_equity():
-    return Equity(ticker, "General Electric")
+    return Equity(ticker=ticker, company_name="General Electric")

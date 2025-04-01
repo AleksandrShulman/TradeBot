@@ -1,15 +1,13 @@
 from abc import ABC
 from datetime import datetime
 
-from common.test.util.test_object_util import expiry
+from pydantic import BaseModel
 
+class OrderExpiry(ABC, BaseModel):
+    expiry_date: datetime
+    all_or_none: bool = False
 
-class OrderExpiry(ABC):
-    def __init__(self, expiry_date: datetime.date, all_or_none=False):
-        self.expiry_date: datetime.date = expiry_date
-        self.all_or_none: bool = all_or_none
-
-    def valid_at(self, trade_date: datetime.date) -> bool:
+    def valid_at(self, trade_date: datetime) -> bool:
         return trade_date < self.expiry_date
 
     def __str__(self):

@@ -1,5 +1,7 @@
 from abc import ABC
 
+from pydantic import BaseModel
 
-class Request(ABC):
+
+class Request(ABC, BaseModel):
     pass

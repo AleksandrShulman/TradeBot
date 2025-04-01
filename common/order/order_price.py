@@ -1,16 +1,12 @@
+from pydantic import BaseModel
 
 from common.finance.amount import Amount, ZERO
 from common.order.order_price_type import OrderPriceType
 
 
-class OrderPrice:
-    def __init__(self, order_price_type: OrderPriceType, price: Amount=Amount(0,0)):
-        self.order_price_type: OrderPriceType = order_price_type
-
-        if order_price_type is OrderPriceType.NET_EVEN and price != Amount(0,0):
-            raise Exception("Cannot have a price when it is supposed to be EVEN")
-
-        self.price: Amount = price
+class OrderPrice(BaseModel):
+    order_price_type: OrderPriceType
+    price: Amount
 
     def to_amount(self)->Amount:
         if self.order_price_type == OrderPriceType.NET_EVEN:
@@ -19,6 +15,11 @@ class OrderPrice:
             return self.price
         if self.order_price_type == OrderPriceType.NET_DEBIT:
             return self.price * -1
+
+    def __validate__(order_price_type, price):
+        if order_price_type is OrderPriceType.NET_EVEN and price != Amount(0, 0):
+            raise Exception("Cannot have a price when it is supposed to be EVEN")
+
 
     def __str__(self):
         return f"{self.order_price_type.name}: {self.price}"

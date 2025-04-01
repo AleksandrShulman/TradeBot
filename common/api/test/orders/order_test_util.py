@@ -17,25 +17,26 @@ from common.order.order import Order
 from common.order.order_line import OrderLine
 from common.order.order_price import OrderPrice
 from common.order.order_price_type import OrderPriceType
+from common.test.util.test_object_util import price
 
-DEFAULT_AMOUNT = Amount(100, 0)
-DEFAULT_EQUITY = Equity("GE", "General Electric")
+DEFAULT_AMOUNT = Amount(whole=100, part=0)
+DEFAULT_EQUITY = Equity(ticker="GE", company_name="General Electric")
 
 class OrderTestUtil:
 
     @staticmethod
     def build_equity_order(equity:Equity=DEFAULT_EQUITY, action=Action.BUY, price: Amount = DEFAULT_AMOUNT):
-        ol_1 = OrderLine(equity, action, 1)
-        order_price: OrderPrice = OrderPrice(OrderPriceType.LIMIT, price)
+        ol_1 = OrderLine(tradable=equity, action=action, quantity=1)
+        order_price: OrderPrice = OrderPrice(order_price_type=OrderPriceType.LIMIT, price=price)
         order_lines: list[OrderLine] = [ol_1]
 
-        order = Order(None, GoodForDay(), order_lines, order_price)
+        order = Order(expiry=GoodForDay(), order_lines=order_lines, order_price=order_price)
         return order
 
     @staticmethod
     # TODO: I may need to make this an OrderPrice, b/c negative values for amount don't work.
     # TODO: Find out if these things put in the API as LIMIT, or a NET_CREDIT? How does E*Trade think of them?
-    def build_spread_order(order_price: OrderPrice = OrderPrice(OrderPriceType.NET_CREDIT, Amount(1,99))):
+    def build_spread_order(order_price: OrderPrice = OrderPrice(order_price_type=OrderPriceType.NET_CREDIT, price=Amount(whole=1,part=99))):
         order_lines: list[OrderLine] = list()
 
         equity = Equity("GE")
