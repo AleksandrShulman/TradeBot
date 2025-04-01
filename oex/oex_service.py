@@ -11,6 +11,7 @@ from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_request import ListOrdersRequest
 from common.api.orders.order_list_response import ListOrdersResponse
 from common.api.orders.order_service import OrderService
+from common.api.orders.preview_order_request import PreviewOrderRequest
 from common.exchange.connector import Connector
 from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.exchange.exchange_name import ExchangeName
@@ -127,10 +128,11 @@ class OexService:
         if (content_type != 'application/json'):
             return 'Content-Type not supported!'
 
-        json: dict = request.json
-        preview_order_request = jsonpickle.decode(json)
+        form = request.form
+        input = request.json
+        preview_order_request = PreviewOrderRequest.model_validate(input)
 
-        return jsonify([])
+        print(preview_order_request)
         pass
 
 

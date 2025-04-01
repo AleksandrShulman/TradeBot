@@ -110,8 +110,6 @@ def test_equity_order_for_preview_using_pydantic(order_service: OrderService, ac
     decoded: PreviewOrderRequest = PreviewOrderRequest.model_validate_json(result)
     assert decoded.order_metadata.client_order_id == client_order_id
 
-
-
 def test_equity_order_for_preview_and_place(order_service: OrderService, account_key: str):
     order_type: OrderType = OrderType.EQ
     account_id = account_key
