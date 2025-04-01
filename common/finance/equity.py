@@ -5,7 +5,7 @@ from common.order.tradable_type import TradableType
 
 class Equity(Tradable):
     ticker: str
-    company_name: str
+    company_name: str = None
     price: Price = None
 
     class Config:

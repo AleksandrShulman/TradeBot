@@ -98,16 +98,16 @@ def test_equity_order_for_preview_using_pydantic(order_service: OrderService, ac
     order_type: OrderType = OrderType.EQ
     account_id = account_key
     client_order_id = OrderUtil.generate_random_client_order_id()
-    order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, client_order_id)
+    order_metadata: OrderMetadata = OrderMetadata(order_type=order_type, account_id=account_id, client_order_id=client_order_id)
 
     order = OrderTestUtil.build_equity_order()
 
-    preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
+    preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata=order_metadata, order=order)
 
-    result = jsonpickle.encode(preview_order_request)
+    result: str = preview_order_request.model_dump_json()
     print(result)
 
-    decoded: PreviewOrderRequest = jsonpickle.decode(result)
+    decoded: PreviewOrderRequest = PreviewOrderRequest.model_validate_json(result)
     assert decoded.order_metadata.client_order_id == client_order_id
 
 

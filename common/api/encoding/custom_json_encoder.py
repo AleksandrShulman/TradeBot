@@ -83,7 +83,6 @@ class CustomJSONEncoder(JSONEncoder):
 
         if isinstance(o, (Order)):
             return {
-                "order_id": o.order_id,
                 "expiry": o.expiry,
                 "order_lines": o.order_lines,
                 "order_price": o.order_price

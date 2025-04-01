@@ -74,7 +74,7 @@ class OrderConversionUtil:
 
         order_lines: list[OrderLine] = OrderConversionUtil.process_instrument_to_orderlines(input_order)
 
-        input_order: Order = Order(None, expiry, order_lines, limit_price)
+        input_order: Order = Order(expiry=expiry, order_lines=order_lines, order_price=limit_price)
         return input_order
 
     @staticmethod
@@ -86,7 +86,7 @@ class OrderConversionUtil:
             order_action = Action[instrument['orderAction']]
             product = instrument["Product"]
             symbol = product['symbol']
-            equity = Equity(symbol, None)
+            equity = Equity(ticker=symbol, company_name=None)
             security_type = product["securityType"]
 
             if security_type == TradableType.Equity.value[0]:

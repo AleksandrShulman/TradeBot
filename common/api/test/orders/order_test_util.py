@@ -1,6 +1,7 @@
 import string
 from collections import deque
 from datetime import datetime
+from locale import currency
 from random import choices
 from xml.sax import default_parser_list
 
@@ -39,10 +40,10 @@ class OrderTestUtil:
     def build_spread_order(order_price: OrderPrice = OrderPrice(order_price_type=OrderPriceType.NET_CREDIT, price=Amount(whole=1,part=99))):
         order_lines: list[OrderLine] = list()
 
-        equity = Equity("GE")
+        equity = Equity(ticker="GE")
         option_expiry: datetime.date = datetime(2025, 1, 31).date()
-        tradable1: Option = Option(equity, OptionType.PUT, Amount(160, 0, Currency.US_DOLLARS), option_expiry)
-        tradable2: Option = Option(equity, OptionType.PUT, Amount(155, 0, Currency.US_DOLLARS), option_expiry)
+        tradable1: Option = Option(equity, OptionType.PUT, Amount(whole=160, part=0, currency=Currency.US_DOLLARS), option_expiry)
+        tradable2: Option = Option(equity, OptionType.PUT, Amount(whole=155, part=0, currency=Currency.US_DOLLARS), option_expiry)
 
         ol_1 = OrderLine(tradable1, Action.SELL_OPEN, 1)
         ol_2 = OrderLine(tradable2, Action.BUY_OPEN, 1)
@@ -50,7 +51,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price)
+        return Order(expiry=GoodForDay(), order_lines=order_lines, order_price=order_price)
 
     @staticmethod
     def build_covered_call():
@@ -68,7 +69,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price)
+        return Order(expiry=GoodForDay(), order_lines=order_lines, order_price=order_price)
 
     @staticmethod
     def build_calendar_spread():
@@ -88,7 +89,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price)
+        return Order(expiry=GoodForDay(), order_lines=order_lines, order_price=order_price)
 
     @staticmethod
     def build_three_option_put_one_spread_one_naked():
@@ -107,7 +108,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price)
+        return Order(expiry=GoodForDay(), order_lines=order_lines, order_price=order_price)
 
     @staticmethod
     def build_diagonal_spread():
@@ -127,7 +128,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price)
+        return Order(expiry=GoodForDay(), order_lines=order_lines, order_price=order_price)
 
     @staticmethod
     def build_horizontal_spread():
@@ -146,7 +147,7 @@ class OrderTestUtil:
         order_lines.append(ol_1)
         order_lines.append(ol_2)
 
-        return Order(None, GoodForDay(), order_lines, order_price)
+        return Order(expiry=GoodForDay(), order_lines=order_lines, order_price=order_price)
 
     @staticmethod
     def build_iron_butterfly():
@@ -173,4 +174,4 @@ class OrderTestUtil:
         order_lines.append(ol_3)
         order_lines.append(ol_4)
 
-        return Order(None, GoodForDay(), order_lines, order_price)
+        return Order(expiry=GoodForDay(), order_lines=order_lines, order_price=order_price)

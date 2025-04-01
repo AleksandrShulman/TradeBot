@@ -3,12 +3,13 @@ from pydantic import BaseModel
 from common.order.action import Action
 from common.finance.tradable import Tradable
 
+QUANTITY_FILLED_NOT_SPECIFIED = -1
 
 class OrderLine(BaseModel):
     tradable: Tradable
     action: Action
     quantity: int
-    quantity_filled: int = None
+    quantity_filled: int = QUANTITY_FILLED_NOT_SPECIFIED
 
     @staticmethod
     def __validate__(quantity, action, tradable):
