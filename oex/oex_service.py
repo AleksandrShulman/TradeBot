@@ -128,13 +128,14 @@ class OexService:
         if (content_type != 'application/json'):
             return 'Content-Type not supported!'
 
-        form = request.form
-        input = request.json
-        preview_order_request = PreviewOrderRequest.model_validate(input)
+        preview_order_request = PreviewOrderRequest.model_validate(request.json)
+        if not preview_order_request.order_metadata.account_id:
+            preview_order_request.order_metadata.account_id = account_id
 
-        print(preview_order_request)
-        pass
+        order_service: OrderService = self.order_services[ExchangeName[exchange.upper()]]
+        response = order_service.preview_order(preview_order_request)
 
+        return jsonify(response)
 
     def place_order(self, exchange, account_id: str, preview_id: str):
         place_order_request_body: dict = request.form

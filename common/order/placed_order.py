@@ -1,12 +1,12 @@
+from pydantic import BaseModel
 
 from common.order.order import Order
 from common.order.placed_order_details import PlacedOrderDetails
 
 
-class PlacedOrder:
-    def __init__(self, order: Order, placed_order_details: PlacedOrderDetails):
-        self.order = order
-        self.placed_order_details: PlacedOrderDetails = placed_order_details
+class PlacedOrder(BaseModel):
+    order: Order
+    placed_order_details: PlacedOrderDetails
 
     def get_order(self):
         return self.order

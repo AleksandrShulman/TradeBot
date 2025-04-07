@@ -105,8 +105,10 @@ def test_equity_order_for_preview_using_pydantic(order_service: OrderService, ac
     preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata=order_metadata, order=order)
 
     result: str = preview_order_request.model_dump_json()
+    result_str: dict = preview_order_request.model_dump()
     print(result)
 
+    decoded_str = PreviewOrderRequest.model_validate(result_str)
     decoded: PreviewOrderRequest = PreviewOrderRequest.model_validate_json(result)
     assert decoded.order_metadata.client_order_id == client_order_id
 

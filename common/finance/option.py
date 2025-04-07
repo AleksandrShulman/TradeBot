@@ -13,20 +13,14 @@ from dateutil.parser import parse
 
 
 class Option(Tradable):
-    def __init__(self, equity: Equity, type: OptionType,
-                 strike: Amount, expiry: datetime.date, style: ExerciseStyle=ExerciseStyle.AMERICAN):
-        self.equity: Equity = equity
-        self.type: OptionType = type
-        self.strike: Amount = strike
-        self.expiry: datetime.date = expiry
-        self.style: ExerciseStyle = style
-
-        for var in vars(self):
-            if self.__getattribute__(var) is None:
-                raise Exception(f"Missing var! - {var}")
+    equity: Equity
+    type: OptionType
+    strike: Amount
+    expiry: datetime
+    style: ExerciseStyle
 
     def copy_of(self):
-        return Option(self.equity, self.type, self.strike, self.expiry, self.style)
+        return Option(tradable=self.equity, type=self.type, strike=self.strike, expiry=self.expiry, style=self.style)
 
     def get_type(self) -> TradableType:
         return TradableType.Option
@@ -58,12 +52,12 @@ class Option(Tradable):
     @staticmethod
     # Space-delimited info in the form $TICKET MM DD YY $STRIKE TYPE
     def from_str(input: str):
-        components = input.split(' ')
-        ticker: int = components[0]
+        components: list[str] = input.split(' ')
+        ticker: int = int(components[0])
         expiry: datetime = parse(" ".join(components[1:4]))
         strike: Amount = Amount.from_string(components[4])
         type: OptionType = OptionType.from_str(components[5])
 
         company_name = LocalTickerLookup.lookup(ticker)
 
-        return Option(Equity(ticker, company_name), type, strike, expiry, ExerciseStyle.from_ticker(ticker))
+        return Option(tradable=Equity(ticker=ticker, company_name=company_name), type=type, strike=strike, expiry=expiry, exercise_style=ExerciseStyle.from_ticker(ticker))

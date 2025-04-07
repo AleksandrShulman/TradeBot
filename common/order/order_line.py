@@ -1,5 +1,8 @@
-from pydantic import BaseModel
 
+from pydantic import BaseModel, field_validator, field_serializer
+
+from common.finance.equity import Equity
+from common.finance.option import Option
 from common.order.action import Action
 from common.finance.tradable import Tradable
 
@@ -10,6 +13,31 @@ class OrderLine(BaseModel):
     action: Action
     quantity: int
     quantity_filled: int = QUANTITY_FILLED_NOT_SPECIFIED
+
+    class Config:
+        use_enum_values = True
+
+    @field_serializer('tradable')
+    def serialize_tradable(self, value: Tradable, _info):
+        return {
+            "__type__": value.__class__.__name__,
+            **value.model_dump()
+        }
+
+    # --- VALIDATOR: extract class name and dispatch
+    @field_validator('tradable', mode='before')
+    @classmethod
+    def deserialize_tradable(cls, value):
+        if isinstance(value, Tradable):  # already parsed
+            return value
+        type_ = value.pop("__type__", None)
+        if type_ == "Option":
+            return Option.model_validate(value)
+        elif type_ == "Equity":
+            return Equity.model_validate(value)
+        else:
+            raise ValueError(f"Unknown Tradable type: {type_}")
+
 
     @staticmethod
     def __validate__(quantity, action, tradable):

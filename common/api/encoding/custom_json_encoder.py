@@ -6,7 +6,6 @@ from datetime import date
 from json import JSONEncoder
 
 from werkzeug.http import http_date
-import typing as t
 
 from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_response import ListOrdersResponse

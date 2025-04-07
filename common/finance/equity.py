@@ -1,3 +1,5 @@
+from typing import Optional
+
 from common.finance.price import Price
 from common.finance.tradable import Tradable
 from common.order.tradable_type import TradableType
@@ -5,8 +7,7 @@ from common.order.tradable_type import TradableType
 
 class Equity(Tradable):
     ticker: str
-    company_name: str = None
-    price: Price = None
+    company_name: Optional[str] = None
 
     class Config:
         arbitrary_types_allowed = True
