@@ -11,7 +11,7 @@ from common.api.response import Response
 
 class GetTradableResponse(Response, BaseModel):
     tradable: Tradable
-    response_time: datetime
+    response_time: Optional[datetime] = None
     current_price: Price
     volume: int
     greeks: Optional[Greeks] = None

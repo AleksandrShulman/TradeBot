@@ -88,18 +88,18 @@ def test_put_debit_spread(quote_service):
 # If python had a proper mocking framework, this contrivance wouldn't be necessary
 def return_market_prices(get_tradable_request: GetTradableRequest)->GetTradableResponse:
     if get_tradable_request == GetTradableRequest(tradable=short_put):
-        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=7, part=15).to_float(), ask=Amount(whole=8, part=30).to_float()), volume=5)
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, current_price=Price(bid=Amount(whole=7, part=15).to_float(), ask=Amount(whole=8, part=30).to_float()), volume=5)
     elif get_tradable_request == GetTradableRequest(tradable=long_put):
-        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=4, part=25).to_float(), ask=Amount(whole=4, part=85).to_float()), volume=5)
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, current_price=Price(bid=Amount(whole=4, part=25).to_float(), ask=Amount(whole=4, part=85).to_float()), volume=5)
     elif get_tradable_request == GetTradableRequest(tradable=short_call):
-        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=15, part=20).to_float(), ask=Amount(whole=15, part=75).to_float()), volume=5)
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, current_price=Price(bid=Amount(whole=15, part=20).to_float(), ask=Amount(whole=15, part=75).to_float()), volume=5)
     elif get_tradable_request == GetTradableRequest(tradable=long_call):
-        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=9, part=85).to_float(), ask=Amount(whole=10, part=55).to_float()), volume=5)
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, current_price=Price(bid=Amount(whole=9, part=85).to_float(), ask=Amount(whole=10, part=55).to_float()), volume=5)
     elif get_tradable_request == GetTradableRequest(tradable=cs_short_put):
-        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=3, part=20).to_float(), ask=Amount(whole=3, part=50).to_float()), volume=5)
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, current_price=Price(bid=Amount(whole=3, part=20).to_float(), ask=Amount(whole=3, part=50).to_float()), volume=5)
     elif get_tradable_request == GetTradableRequest(tradable=cs_long_put):
-        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=1, part=99).to_float(), ask=Amount(whole=2, part=30).to_float()), volume=5)
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, current_price=Price(bid=Amount(whole=1, part=99).to_float(), ask=Amount(whole=2, part=30).to_float()), volume=5)
     elif get_tradable_request == GetTradableRequest(tradable=cs_long_put_2):
-        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=1, part=9).to_float(), ask=Amount(whole=1, part=19).to_float()), volume=5)
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, current_price=Price(bid=Amount(whole=1, part=9).to_float(), ask=Amount(whole=1, part=19).to_float()), volume=5)
     else:
         raise Exception("Option not recognized")
