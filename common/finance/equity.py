@@ -1,12 +1,22 @@
-from typing import Optional
+from typing import Optional, Annotated
+
+from pydantic import PlainValidator
 
 from common.finance.price import Price
 from common.finance.tradable import Tradable
 from common.order.tradable_type import TradableType
 
 
+def validate_ticker(input: str):
+    if not input:
+        raise ValueError("Ticker symbol cannot be empty")
+
+    if len(input) > 4:
+        raise ValueError("Ticker symbol cannot greater than 4 characters")
+    return input
+
 class Equity(Tradable):
-    ticker: str
+    ticker: Annotated[str, PlainValidator(validate_ticker)]
     company_name: Optional[str] = None
 
     class Config:
