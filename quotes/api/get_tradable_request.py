@@ -1,10 +1,11 @@
+from pydantic import BaseModel
+
 from common.finance.tradable import Tradable
 from common.api.request import Request
 
 
-class GetTradableRequest(Request):
-    def __init__(self, tradable: Tradable):
-        self.tradable: Tradable = tradable
+class GetTradableRequest(Request, BaseModel):
+    tradable: Tradable
 
     def get_tradable(self):
         return self.tradable

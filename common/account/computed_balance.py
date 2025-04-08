@@ -1,7 +1,7 @@
 from common.finance.amount import Amount
 from common.finance.currency import Currency
 
-ZERO_AMOUNT = Amount(0,0, Currency.US_DOLLARS)
+ZERO_AMOUNT = Amount(whole=0, part=0, currency=Currency.US_DOLLARS)
 
 class ComputedBalance:
     def __init__(self, cash_available_for_investment: Amount = ZERO_AMOUNT,

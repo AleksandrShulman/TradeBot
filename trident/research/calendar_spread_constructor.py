@@ -67,9 +67,9 @@ class CalendarSpreadConstructor:
         return options_chain
 
     def get_current_price(self)->float:
-        return self.qs.get_tradable_quote(GetTradableRequest(self.equity)).current_price.mark
+        return self.qs.get_tradable_quote(GetTradableRequest(tradable=self.equity)).current_price.mark
 
-    def build_matrix(self, delta_from_current_price: int=DEFAULT_DELTA_FROM_CURRENT_PRICE)->DataFrame:
+    def build_matrix(self, delta_from_current_price: int=DEFAULT_DELTA_FROM_CURRENT_PRICE) -> DataFrame:
         current_price = self.get_current_price()
 
         # to nearest $.5

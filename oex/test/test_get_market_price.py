@@ -9,10 +9,8 @@ from common.finance.equity import Equity
 from common.finance.option import Option
 from common.finance.option_type import OptionType
 from common.finance.price import Price
-from common.finance.tradable import Tradable
 from common.order.action import Action
 from common.order.expiry.good_for_day import GoodForDay
-from common.order.expiry.order_expiry import OrderExpiry
 from common.order.order import Order
 from common.order.order_line import OrderLine
 from common.order.order_price import OrderPrice
@@ -22,28 +20,27 @@ from quotes.api.get_tradable_response import GetTradableResponse
 from quotes.quote_service import QuoteService
 from oex.trade_execution_util import TradeExecutionUtil
 
-equity = Equity("GE", "General Electric")
+equity = Equity(ticker="GE", company_name="General Electric")
 
-short_put = Option(equity, OptionType.PUT, Amount(195, 0), datetime(2025, 5, 16).date())
-long_put = Option(equity, OptionType.PUT, Amount(185, 0), datetime(2025, 5, 16).date())
+short_put = Option(equity=equity, type=OptionType.PUT, price=Amount(whole=195, part=0), expiry=datetime(2025, 5, 16).date())
+long_put = Option(equity=equity, type=OptionType.PUT, price=Amount(whole=185, part=0), expiry=datetime(2025, 5, 16).date())
 
-cs_short_put = Option(equity, OptionType.PUT, Amount(202, 50), datetime(2025, 2, 14).date())
-cs_long_put = Option(equity, OptionType.PUT, Amount(197, 50), datetime(2025, 2, 21).date())
-cs_long_put_2 = Option(equity, OptionType.PUT, Amount(195, 0), datetime(2025, 5, 14).date())
+cs_short_put = Option(equity=equity, type=OptionType.PUT, price=Amount(whole=202, part=50), expiry=datetime(2025, 2, 14).date())
+cs_long_put = Option(equity=equity, type=OptionType.PUT, price=Amount(whole=197, part=50), expiry=datetime(2025, 2, 21).date())
+cs_long_put_2 = Option(equity=equity, type=OptionType.PUT, price=Amount(whole=195, part=0), expiry=datetime(2025, 5, 14).date())
 
 
-short_call = Option(equity, OptionType.CALL, Amount(200, 0), datetime(2025, 5, 16).date())
-long_call = Option(equity, OptionType.CALL, Amount(210, 0), datetime(2025, 5, 16).date())
+short_call = Option(equity=equity, type=OptionType.CALL, price=Amount(whole=200, part=0), expiry=datetime(2025, 5, 16).date())
+long_call = Option(equity=equity, type=OptionType.CALL, price=Amount(whole=210, part=0), expiry=datetime(2025, 5, 16).date())
 
-sell_put_order_line = OrderLine(short_put, Action.SELL_OPEN, 1)
-buy_put_order_line = OrderLine(long_put, Action.BUY_OPEN, 1)
+sell_put_order_line = OrderLine(tradable=short_put, action=Action.SELL_OPEN, quantity=1)
+buy_put_order_line = OrderLine(tradable=long_put, action=Action.BUY_OPEN, quantity=1)
 
-sell_call_order_line = OrderLine(short_call, Action.SELL_OPEN, 1)
-buy_call_order_line = OrderLine(long_call, Action.BUY_OPEN, 1)
+sell_call_order_line = OrderLine(tradable=short_call, action=Action.SELL_OPEN, quantity=1)
+buy_call_order_line = OrderLine(tradable=long_call, action=Action.BUY_OPEN, quantity=1)
 
 put_credit_spread_orderlines = [sell_put_order_line, buy_put_order_line]
 call_credit_spread_orderlines = [sell_call_order_line, buy_call_order_line]
-
 
 
 @pytest.fixture
@@ -56,7 +53,7 @@ def quote_service():
     return qs
 
 def test_put_credit_spread(quote_service):
-    order: Order = Order(None, GoodForDay(), put_credit_spread_orderlines, OrderPrice(OrderPriceType.NET_CREDIT, Amount(3, 18)))
+    order: Order = Order(expiry=GoodForDay(), order_lines=put_credit_spread_orderlines, order_price=OrderPrice(order_price_type=OrderPriceType.NET_CREDIT, price=Amount(whole=3, part=18)))
 
     market_price: Price = TradeExecutionUtil.get_market_price(order, quote_service)
 
@@ -65,7 +62,7 @@ def test_put_credit_spread(quote_service):
     assert market_price.mark == 3.17
 
 def test_call_credit_spread(quote_service):
-    order: Order = Order(None, GoodForDay(), call_credit_spread_orderlines, OrderPrice(OrderPriceType.NET_CREDIT, Amount(5, 28)))
+    order: Order = Order(expiry=GoodForDay(), order_lines=call_credit_spread_orderlines, order_price=OrderPrice(order_price_type=OrderPriceType.NET_CREDIT, price=Amount(whole=5, part=28)))
 
     market_price: Price = TradeExecutionUtil.get_market_price(order, quote_service)
 
@@ -74,13 +71,13 @@ def test_call_credit_spread(quote_service):
     assert market_price.mark == 5.28
 
 def test_put_debit_spread(quote_service):
-    cs_short_put_order_line = OrderLine(cs_short_put, Action.SELL_OPEN, 1)
-    cs_long_put_order_line = OrderLine(cs_long_put, Action.BUY_OPEN, 1)
-    cs_long_put_2_order_line = OrderLine(cs_long_put_2, Action.BUY_OPEN, 1)
+    cs_short_put_order_line = OrderLine(tradable=cs_short_put, action=Action.SELL_OPEN, quantity=1)
+    cs_long_put_order_line = OrderLine(tradable=cs_long_put, action=Action.BUY_OPEN, quantity=1)
+    cs_long_put_2_order_line = OrderLine(tradable=cs_long_put_2, action=Action.BUY_OPEN, quantity=1)
 
     call_debit_spread_order_lines = [cs_short_put_order_line, cs_long_put_order_line, cs_long_put_2_order_line]
-    order: Order = Order(None, GoodForDay(), call_debit_spread_order_lines,
-                         OrderPrice(OrderPriceType.NET_CREDIT, Amount(0, 7)))
+    order: Order = Order(expiry=GoodForDay(), order_lines=call_debit_spread_order_lines,
+                         order_price=OrderPrice(order_price_type=OrderPriceType.NET_CREDIT, price=Amount(whole=0, part=7)))
 
     market_price: Price = TradeExecutionUtil.get_market_price(order, quote_service)
 
@@ -91,19 +88,19 @@ def test_put_debit_spread(quote_service):
 
 # If python had a proper mocking framework, this contrivance wouldn't be necessary
 def return_market_prices(get_tradable_request: GetTradableRequest)->GetTradableResponse:
-    if get_tradable_request == GetTradableRequest(short_put):
-        return GetTradableResponse(get_tradable_request.tradable, None, Price(Amount(7, 15).to_float(),Amount (8, 30).to_float()), 5)
-    elif get_tradable_request == GetTradableRequest(long_put):
-        return GetTradableResponse(get_tradable_request.tradable, None, Price(Amount(4, 25).to_float(),Amount (4, 85).to_float()), 5)
-    elif get_tradable_request == GetTradableRequest(short_call):
-        return GetTradableResponse(get_tradable_request.tradable, None, Price(Amount(15, 20).to_float(), Amount(15, 75).to_float()), 5)
-    elif get_tradable_request == GetTradableRequest(long_call):
-        return GetTradableResponse(get_tradable_request.tradable, None, Price(Amount(9, 85).to_float(), Amount(10, 55).to_float()), 5)
-    elif get_tradable_request == GetTradableRequest(cs_short_put):
-        return GetTradableResponse(get_tradable_request.tradable, None, Price(Amount(3, 20).to_float(), Amount(3, 50).to_float()), 5)
-    elif get_tradable_request == GetTradableRequest(cs_long_put):
-        return GetTradableResponse(get_tradable_request.tradable, None, Price(Amount(1, 99).to_float(), Amount(2, 30).to_float()), 5)
-    elif get_tradable_request == GetTradableRequest(cs_long_put_2):
-        return GetTradableResponse(get_tradable_request.tradable, None, Price(Amount(1, 9).to_float(), Amount(1, 19).to_float()), 5)
+    if get_tradable_request == GetTradableRequest(tradable=short_put):
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=7, part=15).to_float(), ask=Amount(whole=8, part=30).to_float()), volume=5)
+    elif get_tradable_request == GetTradableRequest(tradable=long_put):
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=4, part=25).to_float(), ask=Amount(whole=4, part=85).to_float()), volume=5)
+    elif get_tradable_request == GetTradableRequest(tradable=short_call):
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=15, part=20).to_float(), ask=Amount(whole=15, part=75).to_float()), volume=5)
+    elif get_tradable_request == GetTradableRequest(tradable=long_call):
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=9, part=85).to_float(), ask=Amount(whole=10, part=55).to_float()), volume=5)
+    elif get_tradable_request == GetTradableRequest(tradable=cs_short_put):
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=3, part=20).to_float(), ask=Amount(whole=3, part=50).to_float()), volume=5)
+    elif get_tradable_request == GetTradableRequest(tradable=cs_long_put):
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=1, part=99).to_float(), ask=Amount(whole=2, part=30).to_float()), volume=5)
+    elif get_tradable_request == GetTradableRequest(tradable=cs_long_put_2):
+        return GetTradableResponse(tradable=get_tradable_request.tradable, response_time=None, price=Price(bid=Amount(whole=1, part=9).to_float(), ask=Amount(whole=1, part=19).to_float()), volume=5)
     else:
         raise Exception("Option not recognized")

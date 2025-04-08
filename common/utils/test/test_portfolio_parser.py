@@ -6,9 +6,9 @@ from common.finance.option import Option
 from common.portfolio.portfolio import Portfolio
 from common.utils import parsing
 
-mara = Equity("MARA", "Marathon Digital")
-sfix = Equity("SFIX", "StitchFix")
-riot = Equity("RIOT", "Riot Platforms")
+mara = Equity(ticker="MARA", company_name="Marathon Digital")
+sfix = Equity(ticker="SFIX", company_name="StitchFix")
+riot = Equity(ticker="RIOT", company_name="Riot Platforms")
 
 #VIX Oct 16 '24 $18 Call
 VIX_OCT_16_24_18_CALL = Option.from_str("VIX Oct 16 '24 $18 Call")

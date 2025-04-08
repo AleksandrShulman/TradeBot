@@ -12,8 +12,8 @@ if __name__ == "__main__":
 
     equity: Equity = get_sample_equity()
     option: Option = get_sample_option()
-    equity_request: GetTradableRequest = GetTradableRequest(equity)
-    option_request: GetTradableRequest = GetTradableRequest(option)
+    equity_request: GetTradableRequest = GetTradableRequest(tradable=equity)
+    option_request: GetTradableRequest = GetTradableRequest(tradable=option)
 
     q: QuoteService = ETradeQuoteService(connector)
     equity_response: GetTradableResponse = q.get_tradable_quote(equity_request)

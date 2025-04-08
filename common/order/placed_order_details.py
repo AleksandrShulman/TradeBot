@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -13,5 +14,5 @@ class PlacedOrderDetails(BaseModel):
     status: OrderStatus
     order_placed_time: datetime.datetime
     current_market_price: Price
-    market_session: MarketSession
-    replaces_order_id: str
+    market_session: Optional[MarketSession]
+    replaces_order_id: Optional[str]
