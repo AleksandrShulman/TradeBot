@@ -48,7 +48,7 @@ class Amount(BaseModel):
             raise Exception("could not parse input")
 
         if input_float == 0.0 or input_float == 0:
-            return Amount(0,0, currency)
+            return Amount(whole=0, part=0, currency=currency)
 
         return Amount.from_string(str(input_float), currency)
 

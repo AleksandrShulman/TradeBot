@@ -38,7 +38,7 @@ class TestSameDayExpiryAnalysis:
 
     @pytest.mark.parametrize("closing_option_desc,equity_price,expected_order_value,expected_pl", [(("a"), Amount(whole=5, part=15), Amount(whole=100,part=0, negative=True), Amount(whole=41,part=0, negative=True)),
                                                                                      ("b", Amount(whole=4, part=75), Amount(whole=75, part=0, negative=True), Amount(whole=16, part=0, negative=True)),
-                                                                                     ("c", Amount(whole=4, part=0), Amount(whole=0,part=0), Amount(whole=59, part=0)),
+                                                                                     ("c", Amount(whole=4, part=0), Amount(whole=0, part=0), Amount(whole=59, part=0)),
                                                                                      ("d", Amount(whole=3, part=15), Amount(whole=85, part=0, negative=True), Amount(whole=26, part=0, negative=True)),
                                                                                      ("e", Amount(whole=2, part=95), Amount(whole=100, part=0, negative=True), Amount(whole=41, part=0, negative=True))])
 

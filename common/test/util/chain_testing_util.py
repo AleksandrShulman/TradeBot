@@ -9,7 +9,7 @@ from common.finance.exercise_style import ExerciseStyle
 from common.finance.option_type import OptionType
 from common.finance.price import Price
 
-DEFAULT_EQUITY = Equity(ticker="GE", company_name="General Electric")
+DEFAULT_EQUITY = Equity(ticker="GE", company_name="General Electric", price=Price(bid=9.66,ask=10.07))
 
 DEFAULT_NUM_STRIKES_EACH_SIDE = 5
 DEFAULT_NUM_EXPIRIES = 3
@@ -62,10 +62,10 @@ dict[strike -> (put price, call price)
 """
 
 
-def _get_option_prices_at_strikes(equity, strikes: list[float], strike_delta: Amount, num_strikes_each_side: int, reference_options_price: float, spread_amt=DEFAULT_SPREAD_AMT, expiry=DEFAULT_EXPIRY):
+def _get_option_prices_at_strikes(equity: Equity, strikes: list[float], strike_delta: Amount, num_strikes_each_side: int, reference_options_price: float, spread_amt=DEFAULT_SPREAD_AMT, expiry=DEFAULT_EXPIRY):
     return_list: dict[float, (Price, Price)] = dict()
 
-    current_price: float = equity.price.to_float()
+    current_price: float = equity.price.mark
 
     full_delta_distance = (num_strikes_each_side + 1) * strike_delta
     time_value_line2 = _generate_linear_function((current_price, reference_options_price), (current_price + full_delta_distance, 0))
@@ -84,10 +84,10 @@ def _get_option_prices_at_strikes(equity, strikes: list[float], strike_delta: Am
 
         put_option_price = _generate_full_option_price_around_central_value(put_value, spread_amt)
         call_option_price = _generate_full_option_price_around_central_value(call_value, spread_amt)
-        put_option = Option(equity, OptionType.PUT, strike, expiry, ExerciseStyle.AMERICAN)
-        call_option = Option(equity, OptionType.CALL, strike, expiry, ExerciseStyle.AMERICAN)
-        return_list[strike] = (PricedOption(put_option, put_option_price),
-                               PricedOption(call_option, call_option_price))
+        put_option = Option(equity=equity, type=OptionType.PUT, strike=Amount.from_float(strike), expiry=expiry, style=ExerciseStyle.AMERICAN)
+        call_option = Option(equity=equity, type=OptionType.CALL, strike=Amount.from_float(strike), expiry=expiry, style=ExerciseStyle.AMERICAN)
+        return_list[strike] = (PricedOption(option=put_option, price=put_option_price),
+                               PricedOption(option=call_option, price=call_option_price))
 
     return return_list
 
@@ -109,7 +109,7 @@ def _generate_linear_function(p1: (float, float), p2: (float, float)):
 
 def _generate_full_option_price_around_central_value(
         central_value: float, spread_amt: float = .15) -> Price:
-    return Price(central_value - spread_amt, central_value + spread_amt, central_value + .2)
+    return Price(bid=central_value - spread_amt, ask=central_value + spread_amt, last=central_value + .2)
 
 
 if __name__ == "__main__":

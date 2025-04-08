@@ -19,16 +19,13 @@ class Price(BaseModel):
     def mark(self)->float:
         return round(mean([self.bid, self.ask]), 2)
 
-
     def __repr__(self):
-        self.mark = round(mean([self.bid, self.ask]), 2) if not self.mark else self.mark
         return f"{self.mark:.2f}\t|\t{self.bid:.2f}\t|\t{self.ask:.2f}\t"
 
     def __str__(self):
-        self.mark = round(mean([self.bid, self.ask]), 2) if not self.mark else self.mark
         return f"{self.mark:.2f}\t|\t{self.bid:.2f}\t|\t{self.ask:.2f}\t"
 
     def copy_of(self):
         if hasattr(self, 'last'):
-            return Price(self.bid, self.ask, self.last)
-        return Price(self.bid, self.ask)
+            return Price(bid=self.bid, ask=self.ask, last=self.last)
+        return Price(bid=self.bid, ask=self.ask)

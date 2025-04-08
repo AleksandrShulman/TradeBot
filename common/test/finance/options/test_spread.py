@@ -128,13 +128,11 @@ class TestSpread:
 
         assert collateral_required == expected_collateral_required
 
-
     def test_vertical_call_debit_spread_collateral_requirement(self, sfix_call_debit_spread: Spread):
         expected_collateral_required = Amount(whole=0, part=44) * DE_NORMALIZATION_CONSTANT
         collateral_required: Amount = sfix_call_debit_spread.get_collateral_required()
 
         assert collateral_required == expected_collateral_required
-
 
     def test_diagonal_put_spread_collateral_requirement(self):
         pass
