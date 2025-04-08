@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytest as pytest
+from pydantic import ValidationError
 
 from common.finance.amount import Amount
 from common.finance.currency import Currency
@@ -11,51 +12,51 @@ from common.finance.option_type import OptionType
 from common.order.expiry.good_for_day import GoodForDay
 from common.order.expiry.good_for_sixty_days import GoodForSixtyDays
 
-e = Equity("GE", "General Electric")
+e = Equity(ticker="GE", company_name="General Electric")
 type = OptionType.PUT
 type2 = OptionType.CALL
 
-strike = Amount(10, 0, Currency.US_DOLLARS)
+strike = Amount(whole=10, part=0, currency=Currency.US_DOLLARS)
 
 expiry = GoodForSixtyDays().expiry_date
 expiry2 = GoodForDay().expiry_date
 
-price = Amount(0, 87, Currency.US_DOLLARS)
+price = Amount(whole=0, part=87, currency=Currency.US_DOLLARS)
 style = ExerciseStyle.AMERICAN
 
 
 def test_option_construction():
-    o: Option = Option(e, type, strike, expiry, style)
+    o: Option = Option(equity=e, type=type, strike=strike, expiry=expiry, style=style)
     assert o.expiry is expiry
 
 
 def test_option_empty_type():
-    with pytest.raises(Exception, match='Missing var!'):
-        Option(e, None, strike, expiry, style)
+    with pytest.raises(ValidationError, match='type'):
+        Option(equity=e, type=None, strike=strike, expiry=expiry, style=style)
 
 
 def test_option_none_date():
-    with pytest.raises(Exception, match='Missing var!'):
-        Option(e, type, strike, None, style)
+    with pytest.raises(ValidationError, match='Input should be a valid datetime'):
+        Option(equity=e, type=type, strike=strike, expiry=None, style=style)
 
 
 def test_option_equality():
-    o: Option = Option(e, type, strike, expiry, style)
-    o2: Option = Option(e, type, strike, expiry, style)
+    o: Option = Option(equity=e, type=type, strike=strike, expiry=expiry, style=style)
+    o2: Option = Option(equity=e, type=type, strike=strike, expiry=expiry, style=style)
 
     assert o == o2
 
 
 def test_option_inequality_type():
-    o: Option = Option(e, type, strike, expiry, style)
-    o2: Option = Option(e, type2, strike, expiry, style)
+    o: Option = Option(equity=e, type=type, strike=strike, expiry=expiry, style=style)
+    o2: Option = Option(equity=e, type=type2, strike=strike, expiry=expiry, style=style)
 
     assert o != o2
 
 
 def test_option_inequality_expiry():
-    o: Option = Option(e, type, strike, expiry, style)
-    o2: Option = Option(e, type, strike, expiry2, style)
+    o: Option = Option(equity=e, type=type, strike=strike, expiry=expiry, style=style)
+    o2: Option = Option(equity=e, type=type, strike=strike, expiry=expiry2, style=style)
 
     assert o != o2
 
@@ -65,7 +66,7 @@ def test_option_parsing_european():
     o = Option.from_str(input_str)
 
     assert o.type == OptionType.CALL
-    assert o.strike == Amount(19, 0)
+    assert o.strike == Amount(whole=19, part=0)
     assert datetime(2024, 10, 16) == o.expiry
     assert o.style == ExerciseStyle.EUROPEAN
 
@@ -75,7 +76,6 @@ def test_option_parsing_american():
     o = Option.from_str(input_str)
 
     assert o.type == OptionType.CALL
-    assert o.strike == Amount(7, 50)
+    assert o.strike == Amount(whole=7, part=50)
     assert datetime(2024, 11, 8) == o.expiry
     assert o.style == ExerciseStyle.AMERICAN
-

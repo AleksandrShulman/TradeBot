@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 
 from common.finance.amount import Amount
 from common.finance.chain import Chain
-from common.finance.currency import Currency
 from common.finance.equity import Equity
 from common.finance.option import Option
 from common.finance.priced_option import PricedOption
@@ -10,8 +9,7 @@ from common.finance.exercise_style import ExerciseStyle
 from common.finance.option_type import OptionType
 from common.finance.price import Price
 
-DEFAULT_EQUITY = Equity("GE", "General Electric")
-DEFAULT_EQUITY.set_price(Amount(10, 25, Currency.US_DOLLARS))
+DEFAULT_EQUITY = Equity(ticker="GE", company_name="General Electric")
 
 DEFAULT_NUM_STRIKES_EACH_SIDE = 5
 DEFAULT_NUM_EXPIRIES = 3

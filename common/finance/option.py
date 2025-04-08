@@ -53,11 +53,11 @@ class Option(Tradable):
     # Space-delimited info in the form $TICKET MM DD YY $STRIKE TYPE
     def from_str(input: str):
         components: list[str] = input.split(' ')
-        ticker: int = int(components[0])
+        ticker: str = str(components[0])
         expiry: datetime = parse(" ".join(components[1:4]))
         strike: Amount = Amount.from_string(components[4])
         type: OptionType = OptionType.from_str(components[5])
 
         company_name = LocalTickerLookup.lookup(ticker)
 
-        return Option(tradable=Equity(ticker=ticker, company_name=company_name), type=type, strike=strike, expiry=expiry, exercise_style=ExerciseStyle.from_ticker(ticker))
+        return Option(equity=Equity(ticker=ticker, company_name=company_name), type=type, strike=strike, expiry=expiry, style=ExerciseStyle.from_ticker(ticker))
