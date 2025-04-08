@@ -17,7 +17,7 @@ class SameDayExpiryCombinedOrderAnalyser:
 
         expiries = set()
 
-        current_order_price: Amount = Amount(0,0)
+        current_order_price: Amount = Amount(whole=0, part=0)
         for order in orders:
             order_amt: Amount = order.order_price.to_amount()
             current_order_price += order_amt

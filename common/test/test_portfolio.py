@@ -18,7 +18,7 @@ def test_add_two_options_diff_strike():
     p = Portfolio()
     o = get_sample_option()
     o2 = get_sample_option()
-    o2.strike = Amount(10, 0, Currency.US_DOLLARS)
+    o2.strike = Amount(whole=10, part=0, currency=Currency.US_DOLLARS)
 
     p.add_position(o, 1)
     p.add_position(o2, 1)

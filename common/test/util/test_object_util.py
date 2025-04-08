@@ -36,7 +36,7 @@ def get_sample_strike():
 
 
 def get_sample_option():
-    return Option(get_sample_equity(), type, strike, expiry, style)
+    return Option(equity=get_sample_equity(), type=type, strike=strike, expiry=expiry, style=style)
 
 
 def get_sample_equity():
