@@ -14,3 +14,6 @@ class OrderPriceType(Enum):
     LIMIT_ON_CLOSE = 9
     TRAILING_STOP_PRCT = 10
     UPPER_TRIGGER_BY_HIDDEN_STOP = 11
+
+    def __str__(self):
+        return self.name  # Ensures string conversion returns the name

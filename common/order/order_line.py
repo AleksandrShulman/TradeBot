@@ -24,6 +24,11 @@ class OrderLine(BaseModel):
             **value.model_dump()
         }
 
+
+    #@field_serializer("action")
+    #def serialize_price_type(self, v: Action, _info):
+    #    return v.name
+
     # --- VALIDATOR: extract class name and dispatch
     @field_validator('tradable', mode='before')
     @classmethod

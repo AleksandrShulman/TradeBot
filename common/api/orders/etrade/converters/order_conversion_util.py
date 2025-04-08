@@ -18,7 +18,7 @@ from common.order.expiry.good_until_cancelled import GoodUntilCancelled
 from common.order.expiry.good_until_date import GoodUntilDate
 from common.order.expiry.order_expiry import OrderExpiry
 from common.order.order import Order
-from common.order.order_line import OrderLine
+from common.order.order_line import OrderLine, QUANTITY_FILLED_NOT_SPECIFIED
 from common.order.order_price import OrderPrice
 from common.order.order_price_type import OrderPriceType
 from common.order.order_status import OrderStatus
@@ -70,7 +70,7 @@ class OrderConversionUtil:
         expiry: OrderExpiry = OrderConversionUtil.get_expiry_from_order(input_order)
 
         order_price_type = OrderPriceType[input_order["priceType"]]
-        limit_price: OrderPrice = OrderPrice(order_price_type, Amount.from_float(input_order["limitPrice"]))
+        limit_price: OrderPrice = OrderPrice(order_price_type=order_price_type, price=Amount.from_float(input_order["limitPrice"]))
 
         order_lines: list[OrderLine] = OrderConversionUtil.process_instrument_to_orderlines(input_order)
 
@@ -82,16 +82,16 @@ class OrderConversionUtil:
         order_lines: list[OrderLine] = list[OrderLine]()
         for instrument in order["Instrument"]:
             quantity = instrument['orderedQuantity'] if 'orderedQuantity' in instrument else instrument['quantity']
-            filled_quantity: int = instrument["filledQuantity"] if "filledQuantity" in instrument else 0
+            filled_quantity: int = instrument["filledQuantity"] if "filledQuantity" in instrument else QUANTITY_FILLED_NOT_SPECIFIED
             order_action = Action[instrument['orderAction']]
             product = instrument["Product"]
             symbol = product['symbol']
             equity = Equity(ticker=symbol, company_name=None)
             security_type = product["securityType"]
 
-            if security_type == TradableType.Equity.value[0]:
+            if security_type == TradableType.Equity.value:
                 order_lines.append(OrderLine(equity, order_action, quantity, filled_quantity))
-            elif security_type == TradableType.Option.value[0]:
+            elif security_type == TradableType.Option.value:
                 call_put: OptionType = OptionType.from_str(product['callPut'])
                 expiry_year = product['expiryYear']
                 expiry_month = product['expiryMonth']
@@ -100,8 +100,8 @@ class OrderConversionUtil:
 
                 option_expiry = datetime(expiry_year, expiry_month, expiry_day).date()
 
-                o: Option = Option(equity, call_put, strike_price, option_expiry, ExerciseStyle.from_ticker(symbol))
-                order_lines.append(OrderLine(o, order_action, quantity, filled_quantity))
+                o: Option = Option(equity=equity, type=call_put, strike=strike_price, expiry=option_expiry, style=ExerciseStyle.from_ticker(symbol))
+                order_lines.append(OrderLine(tradable=o, action=order_action, quantity=quantity, quantity_filled=filled_quantity))
             else:
                 raise Exception(f"Could not parse info for security type {security_type}")
 
@@ -162,7 +162,7 @@ class OrderConversionUtil:
         # TODO: See if `orderedQuantity` is necessary
         return f"""
                <Instrument>
-                 <orderAction>{action.name}</orderAction>
+                 <orderAction>{action}</orderAction>
                  <orderedQuantity>{quantity}</orderedQuantity>
                  <quantity>{quantity}</quantity>
                  {product_xml}

@@ -32,12 +32,12 @@ ACCOUNT_ID = "account123"
 
 CLIENT_ORDER_ID = "ABC123"
 SPREAD_ORDER_PREVIEW_ID = "2060570516106"
-SPREAD_ORDER_TOTAL_ORDER_VALUE = Amount(247,95, negative=True)
-SPREAD_ORDER_ESTIMATED_COMMISSION = Amount(1,0)
+SPREAD_ORDER_TOTAL_ORDER_VALUE = Amount(whole=247,part=95, negative=True)
+SPREAD_ORDER_ESTIMATED_COMMISSION = Amount(whole=1,part=0)
 
-SPREAD_ORDER_METADATA = OrderMetadata(OrderType.SPREADS, ACCOUNT_ID, CLIENT_ORDER_ID)
+SPREAD_ORDER_METADATA = OrderMetadata(order_type=OrderType.SPREADS, account_id=ACCOUNT_ID, client_order_id=CLIENT_ORDER_ID)
 
-EXPECTED_ORDER_PRICE = OrderPrice(OrderPriceType.NET_CREDIT, Amount(2,49))
+EXPECTED_ORDER_PRICE = OrderPrice(order_price_type=OrderPriceType.NET_CREDIT, price=Amount(whole=2, part=49))
 
 PLACED_ORDER_ID = 81117
 
@@ -45,18 +45,17 @@ SPREAD_PREVIEW_ORDER_RESPONSE_FILE = os.path.join(os.path.dirname(__file__), "./
 SPREAD_PLACE_ORDER_RESPONSE_FILE = os.path.join(os.path.dirname(__file__), "./resources/output_place_order_spread")
 
 SPREAD_ORDER = OrderTestUtil.build_spread_order(EXPECTED_ORDER_PRICE)
-SPREAD_ORDER.order_id_to_modify = PLACED_ORDER_ID
 
 @pytest.fixture
 def preview_request()->PreviewOrderRequest:
-    tradable = Equity("GE", "General Electric")
-    order_line = OrderLine(tradable, Action.BUY, 3)
-    order_price = OrderPrice(OrderPriceType.NET_DEBIT, Amount(100,0,Currency.US_DOLLARS))
-    order = Order(None, GoodForDay(), [order_line], order_price)
+    tradable = Equity(ticker="GE", company_name="General Electric")
+    order_line = OrderLine(tradable=tradable, action=Action.BUY, quantity=3)
+    order_price = OrderPrice(order_price_type=OrderPriceType.NET_DEBIT, price=Amount(whole=100,part=0, currency=Currency.US_DOLLARS))
+    order = Order(expiry=GoodForDay(), order_lines=[order_line], order_price=order_price)
 
-    order_metadata: OrderMetadata = OrderMetadata(OrderType.EQ, ACCOUNT_ID, CLIENT_ORDER_ID)
+    order_metadata: OrderMetadata = OrderMetadata(order_type=OrderType.EQ, account_id=ACCOUNT_ID, client_order_id=CLIENT_ORDER_ID)
 
-    return PreviewOrderRequest(order_metadata, order)
+    return PreviewOrderRequest(order_metadata=order_metadata, order=order)
 
 @pytest.fixture
 def preview_order_spread_response():

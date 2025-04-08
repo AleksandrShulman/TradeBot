@@ -37,16 +37,16 @@ class OrderTestUtil:
     @staticmethod
     # TODO: I may need to make this an OrderPrice, b/c negative values for amount don't work.
     # TODO: Find out if these things put in the API as LIMIT, or a NET_CREDIT? How does E*Trade think of them?
-    def build_spread_order(order_price: OrderPrice = OrderPrice(order_price_type=OrderPriceType.NET_CREDIT, price=Amount(whole=1,part=99))):
+    def build_spread_order(order_price: OrderPrice = OrderPrice(order_price_type=OrderPriceType.NET_CREDIT, price=Amount(whole=1,part=99)))->Order:
         order_lines: list[OrderLine] = list()
 
         equity = Equity(ticker="GE")
         option_expiry: datetime.date = datetime(2025, 1, 31).date()
-        tradable1: Option = Option(equity, OptionType.PUT, Amount(whole=160, part=0, currency=Currency.US_DOLLARS), option_expiry)
-        tradable2: Option = Option(equity, OptionType.PUT, Amount(whole=155, part=0, currency=Currency.US_DOLLARS), option_expiry)
+        tradable1: Option = Option(equity=equity, type=OptionType.PUT, strike=Amount(whole=160, part=0, currency=Currency.US_DOLLARS), expiry=option_expiry)
+        tradable2: Option = Option(equity=equity, type=OptionType.PUT, strike=Amount(whole=155, part=0, currency=Currency.US_DOLLARS), expiry=option_expiry)
 
-        ol_1 = OrderLine(tradable1, Action.SELL_OPEN, 1)
-        ol_2 = OrderLine(tradable2, Action.BUY_OPEN, 1)
+        ol_1 = OrderLine(tradable=tradable1, action=Action.SELL_OPEN, quantity=1)
+        ol_2 = OrderLine(tradable=tradable2, action=Action.BUY_OPEN, quantity=1)
 
         order_lines.append(ol_1)
         order_lines.append(ol_2)

@@ -40,7 +40,7 @@ class Amount(BaseModel):
         negative = input_str.startswith('-')
         whole = ''.join(c for c in whole if (c.isdigit()))
 
-        return Amount(int(whole), int(part), currency, negative)
+        return Amount(whole=int(whole), part=int(part), currency=currency, negative=negative)
 
     @staticmethod
     def from_float(input_float: float, currency=Currency.US_DOLLARS):

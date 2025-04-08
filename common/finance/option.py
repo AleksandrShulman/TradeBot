@@ -17,7 +17,7 @@ class Option(Tradable):
     type: OptionType
     strike: Amount
     expiry: datetime
-    style: ExerciseStyle
+    style: ExerciseStyle = ExerciseStyle.AMERICAN
 
     def copy_of(self):
         return Option(tradable=self.equity, type=self.type, strike=self.strike, expiry=self.expiry, style=self.style)
