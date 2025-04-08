@@ -15,7 +15,7 @@ def parse_into_portfolio(dataframe) -> Portfolio:
 
         if len(split) == 1:
             ticker = split[0]
-            tradable = Equity(ticker, LocalTickerLookup.lookup(ticker))
+            tradable = Equity(ticker=ticker, company_name=LocalTickerLookup.lookup(ticker))
         else:
             tradable = Option.from_str(" ".join(split))
 
@@ -28,4 +28,4 @@ def parse_into_portfolio(dataframe) -> Portfolio:
 def parse_price_from_row(row):
     bid = float(row["Bid"])
     ask = float(row["Ask"])
-    return Price(bid, ask)
+    return Price(bid=bid, ask=ask)
