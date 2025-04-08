@@ -22,16 +22,15 @@ from oex.trade_execution_util import TradeExecutionUtil
 
 equity = Equity(ticker="GE", company_name="General Electric")
 
-short_put = Option(equity=equity, type=OptionType.PUT, price=Amount(whole=195, part=0), expiry=datetime(2025, 5, 16).date())
-long_put = Option(equity=equity, type=OptionType.PUT, price=Amount(whole=185, part=0), expiry=datetime(2025, 5, 16).date())
+short_put = Option(equity=equity, type=OptionType.PUT, strike=Amount(whole=195, part=0), expiry=datetime(2025, 5, 16).date())
+long_put = Option(equity=equity, type=OptionType.PUT, strike=Amount(whole=185, part=0), expiry=datetime(2025, 5, 16).date())
 
-cs_short_put = Option(equity=equity, type=OptionType.PUT, price=Amount(whole=202, part=50), expiry=datetime(2025, 2, 14).date())
-cs_long_put = Option(equity=equity, type=OptionType.PUT, price=Amount(whole=197, part=50), expiry=datetime(2025, 2, 21).date())
-cs_long_put_2 = Option(equity=equity, type=OptionType.PUT, price=Amount(whole=195, part=0), expiry=datetime(2025, 5, 14).date())
+cs_short_put = Option(equity=equity, type=OptionType.PUT, strike=Amount(whole=202, part=50), expiry=datetime(2025, 2, 14).date())
+cs_long_put = Option(equity=equity, type=OptionType.PUT, strike=Amount(whole=197, part=50), expiry=datetime(2025, 2, 21).date())
+cs_long_put_2 = Option(equity=equity, type=OptionType.PUT, strike=Amount(whole=195, part=0), expiry=datetime(2025, 5, 14).date())
 
-
-short_call = Option(equity=equity, type=OptionType.CALL, price=Amount(whole=200, part=0), expiry=datetime(2025, 5, 16).date())
-long_call = Option(equity=equity, type=OptionType.CALL, price=Amount(whole=210, part=0), expiry=datetime(2025, 5, 16).date())
+short_call = Option(equity=equity, type=OptionType.CALL, strike=Amount(whole=200, part=0), expiry=datetime(2025, 5, 16).date())
+long_call = Option(equity=equity, type=OptionType.CALL, strike=Amount(whole=210, part=0), expiry=datetime(2025, 5, 16).date())
 
 sell_put_order_line = OrderLine(tradable=short_put, action=Action.SELL_OPEN, quantity=1)
 buy_put_order_line = OrderLine(tradable=long_put, action=Action.BUY_OPEN, quantity=1)
