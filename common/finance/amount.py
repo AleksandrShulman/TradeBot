@@ -63,7 +63,7 @@ class Amount(BaseModel):
 
         negative: bool = True if total < 0 else False
 
-        return Amount(abs(new_whole), new_part, self.currency, negative)
+        return Amount(whole=abs(new_whole), part=new_part, currency=self.currency, negative=negative)
 
     def __sub__(self, other):
         if other.currency != self.currency:
@@ -74,7 +74,7 @@ class Amount(BaseModel):
         new_whole: int = math.floor(abs(total) / 100)
         new_part: int = abs(total) % 100
 
-        return Amount(new_whole, new_part, self.currency, total < 0)
+        return Amount(whole=new_whole, part=new_part, currency=self.currency, negative=total < 0)
 
     # This is a scalar operation, returning an Amount, as it makes no sense to multiply two amounts together (units would be Currency^2)
     def __mul__(self, other: float):
