@@ -14,5 +14,5 @@ class PlacedOrderDetails(BaseModel):
     status: OrderStatus
     order_placed_time: datetime.datetime
     current_market_price: Price
-    market_session: Optional[MarketSession]
-    replaces_order_id: Optional[str]
+    market_session: Optional[MarketSession] = MarketSession.REGULAR
+    replaces_order_id: Optional[str] = None

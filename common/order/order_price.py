@@ -6,7 +6,7 @@ from common.order.order_price_type import OrderPriceType
 
 class OrderPrice(BaseModel):
     order_price_type: OrderPriceType
-    price: Amount
+    price: Amount = ZERO
 
     def to_amount(self)->Amount:
         if self.order_price_type == OrderPriceType.NET_EVEN:

@@ -52,26 +52,29 @@ class IncrementalPriceDeltaExecutionTactic(ExecutionTactic):
         if proposed_new_amount == ZERO_AMOUNT:
             return OrderPrice(OrderPriceType.NET_EVEN, Amount(0,0)), DEFAULT_WAIT_SEC
         elif proposed_new_amount < ZERO_AMOUNT:
-            return OrderPrice(OrderPriceType.NET_DEBIT, abs(proposed_new_amount)), DEFAULT_WAIT_SEC
+            return OrderPrice(order_price_type=OrderPriceType.NET_DEBIT, price=abs(proposed_new_amount)), DEFAULT_WAIT_SEC
         else:
-            return OrderPrice(OrderPriceType.NET_CREDIT, proposed_new_amount), DEFAULT_WAIT_SEC
+            return OrderPrice(order_price_type=OrderPriceType.NET_CREDIT, price=proposed_new_amount), DEFAULT_WAIT_SEC
 
     @staticmethod
     def get_equity_new_price(delta, current_order_price, placed_order: PlacedOrder):
+        adjustment: float = 0
         if placed_order.order.order_price.order_price_type == OrderPriceType.LIMIT:
-            action: Action = placed_order.order.order_lines[0].action
-            if Action.is_short(action):
-                # decrease the value
-                new_delta = delta * (1 - GAP_REDUCTION_RATIO)
-                adjustment = round(min(new_delta - delta, -.01), 2)
-            else:
-                # increase the value
-                new_delta = delta * (1 - GAP_REDUCTION_RATIO)
-                adjustment = round(max(new_delta - delta, .01), 2)
+            # Why is only first order_line considered? TODO: Add more test cases!
+            for order_line in placed_order.order.order_lines:
+                action: Action = Action[order_line.action]
+                if Action.is_short(action):
+                    # decrease the value
+                    new_delta = delta * (1 - GAP_REDUCTION_RATIO)
+                    adjustment += round(min(new_delta - delta, -.01), 2)
+                else:
+                    # increase the value
+                    new_delta = delta * (1 - GAP_REDUCTION_RATIO)
+                    adjustment += round(max(new_delta - delta, .01), 2)
         else:
             raise Exception("For ")
 
         proposed_new_amount_float: float = round(current_order_price + adjustment, 2)
         proposed_new_amount = Amount.from_float(proposed_new_amount_float)
 
-        return OrderPrice(OrderPriceType.LIMIT, proposed_new_amount), DEFAULT_WAIT_SEC
+        return OrderPrice(order_price_type=OrderPriceType.LIMIT, price=proposed_new_amount), DEFAULT_WAIT_SEC

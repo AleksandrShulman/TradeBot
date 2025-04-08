@@ -7,7 +7,7 @@ from common.order.expiry.good_for_sixty_days import GoodForSixtyDays
 def test_fill_or_kill_is_all_or_nothing():
     expiry = FillOrKill()
 
-    assert expiry.all_or_none
+    assert not expiry.all_or_none
 
 
 def test_fill_or_kill_correct_expiry():

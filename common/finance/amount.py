@@ -85,7 +85,7 @@ class Amount(BaseModel):
         new_whole: int = math.floor(total / 100)
         new_part: int = round(total % 100)
 
-        return Amount(new_whole, new_part, self.currency, negative)
+        return Amount(whole=new_whole, part=new_part, currency=self.currency, negative=negative)
 
     # This can be a scalar operation (units are Currency). It can also be a simple float b/c we'd get a ratio if we divided two values.
     def __truediv__(self, other)->float:

@@ -14,19 +14,10 @@ class Price(BaseModel):
     def round_to_two_decimals(cls, value: float) -> float:
         return round(value, 2)
 
-    def set_mark(self):
-        return (self.bid + self.ask)/2
-
     @computed_field
     @property
-    def set_mark(self)->float:
+    def mark(self)->float:
         return round(mean([self.bid, self.ask]), 2)
-
-
-    # can be a validator
-    if last:
-        self.last = round(last, 2)
-
 
 
     def __repr__(self):
