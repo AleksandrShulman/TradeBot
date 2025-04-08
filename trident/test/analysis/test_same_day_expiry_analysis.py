@@ -43,10 +43,10 @@ class TestSameDayExpiryAnalysis:
                                                                                      ("e", Amount(whole=2, part=95), Amount(whole=100, part=0, negative=True), Amount(whole=41, part=0, negative=True))])
 
     def test_iron_butterfly(self, closing_option_desc: str, equity_price: Amount, expected_order_value: Amount, expected_pl: Amount):
-        covered_call_order: Order = OrderTestUtil.build_iron_butterfly()
+        iron_butterfly_order: Order = OrderTestUtil.build_iron_butterfly()
         equity = Equity(ticker="SFIX", company_name="STITCH FIX INC COM CL A")
 
-        analyser = SameDayExpiryCombinedOrderAnalyser(equity, [covered_call_order])
+        analyser = SameDayExpiryCombinedOrderAnalyser(equity, [iron_butterfly_order])
 
         analysed_order_value = analyser.get_value_for_given_price_at_expiry(equity_price.to_float())
         assert analysed_order_value == expected_order_value

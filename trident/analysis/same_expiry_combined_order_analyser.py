@@ -84,7 +84,7 @@ class SameDayExpiryCombinedOrderAnalyser:
     def get_option_iv_value(order_lines: list[OrderLine], at_price: float)->float:
         iv: float = 0
         for order_line in order_lines:
-            quantity = order_line.quantity if Action.is_long(order_line.action) else -1 * order_line.quantity
+            quantity = order_line.quantity if Action.is_long(Action[order_line.action]) else -1 * order_line.quantity
             option: Option = order_line.tradable
             value = max(option.strike.to_float() - at_price, 0) if option.type == OptionType.PUT else max(
                 at_price - option.strike.to_float(), 0)
