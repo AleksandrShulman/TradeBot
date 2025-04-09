@@ -10,7 +10,10 @@ import typing as t
 
 from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_response import ListOrdersResponse
+from common.api.orders.preview_order_response import PreviewOrderResponse
+from common.api.request_status import RequestStatus
 from common.finance.amount import Amount
+from common.finance.currency import Currency
 from common.finance.equity import Equity
 from common.finance.option import Option
 from common.finance.price import Price
@@ -20,6 +23,7 @@ from common.order.expiry.order_expiry import OrderExpiry
 from common.order.order import Order
 from common.order.order_line import OrderLine
 from common.order.order_price import OrderPrice
+from common.order.order_type import OrderType
 from common.order.placed_order import PlacedOrder
 from common.order.placed_order_details import PlacedOrderDetails
 
@@ -43,6 +47,9 @@ class CustomJSONProvider(DefaultJSONProvider):
             return {
                 "placed_order": o.placed_order
             }
+
+        if isinstance(o, (PreviewOrderResponse)):
+            return o.model_dump()
 
         if isinstance(o, (ExecutedOrder)):
             return {
@@ -107,6 +114,17 @@ class CustomJSONProvider(DefaultJSONProvider):
             return {
                 "price": str(o.price),
                 "order_price_type": str(o.order_price_type)
+            }
+
+        if isinstance(o, (OrderType)):
+            return str(o)
+
+        if isinstance(o, (Currency)):
+            return str(o)
+
+        if isinstance(o, (RequestStatus)):
+            return {
+                "request_status": str(o)
             }
 
         if isinstance(o, (PlacedOrderDetails)):
