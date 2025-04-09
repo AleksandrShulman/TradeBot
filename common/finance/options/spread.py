@@ -57,7 +57,7 @@ class Spread(OptionOrder):
             if self.spread_option_type == OptionType.PUT:
                 if short_strike > long_strike:
                     # classic cash-secured put spread
-                    return (short_strike - long_strike - order_credit_debit)*DE_NORMALIZATION_CONSTANT
+                    return (short_strike - order_credit_debit)*DE_NORMALIZATION_CONSTANT
                 else:
                     # The assumption is that it must be debit
                     if self.order_price.order_price_type != OrderPriceType.NET_DEBIT:

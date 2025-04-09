@@ -59,24 +59,6 @@ def order_service():
     o: OrderService = ETradeOrderService(connector)
     return o
 
-
-def test_equity_order_for_preview_using_custom_json_encoder(order_service: OrderService, account_key: str):
-    order_type: OrderType = OrderType.EQ
-    account_id = account_key
-    client_order_id = OrderUtil.generate_random_client_order_id()
-    order_metadata: OrderMetadata = OrderMetadata(order_type, account_id, client_order_id)
-
-    order = OrderTestUtil.build_equity_order()
-
-    preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata, order)
-
-    result = json.dumps(preview_order_request, cls=CustomJSONEncoder)
-    print(result)
-
-    as_json = json.loads(result)
-    assert as_json["order_metadata"]["client_order_id"] == client_order_id
-
-
 def test_equity_order_for_preview_using_json_pickle(order_service: OrderService, account_key: str):
     order_type: OrderType = OrderType.EQ
     account_id = account_key
@@ -104,13 +86,17 @@ def test_equity_order_for_preview_using_pydantic(order_service: OrderService, ac
 
     preview_order_request: PreviewOrderRequest = PreviewOrderRequest(order_metadata=order_metadata, order=order)
 
-    result: str = preview_order_request.model_dump_json()
-    result_str: dict = preview_order_request.model_dump()
-    print(result)
+    as_json: str = preview_order_request.model_dump_json()
+    print(as_json)
+    as_model: dict = preview_order_request.model_dump()
+    print(as_model)
 
-    decoded_str = PreviewOrderRequest.model_validate(result_str)
-    decoded: PreviewOrderRequest = PreviewOrderRequest.model_validate_json(result)
+    decoded_str = PreviewOrderRequest.model_validate(as_model)
+    print(decoded_str)
+    decoded: PreviewOrderRequest = PreviewOrderRequest.model_validate_json(as_json)
+    print(decoded)
     assert decoded.order_metadata.client_order_id == client_order_id
+    assert decoded_str.order_metadata.client_order_id == client_order_id
 
 def test_equity_order_for_preview_and_place(order_service: OrderService, account_key: str):
     order_type: OrderType = OrderType.EQ
