@@ -39,7 +39,7 @@ class Spread(OptionOrder):
             raise Exception(f"A spread needs to be against the same underlying.")
 
     def get_collateral_required(self) -> Amount:
-        short_long: (Option, Option) = (self.o_1.tradable, self.o_2.tradable) if Action.is_short(self.action_1) else (self.o_2.tradable, self.o_1.tradable)
+        short_long: (Option, Option) = (self.o_1.tradable, self.o_2.tradable) if Action.is_short(Action[self.action_1]) else (self.o_2.tradable, self.o_1.tradable)
         short_option, long_option = short_long
 
         short_strike = short_option.strike
