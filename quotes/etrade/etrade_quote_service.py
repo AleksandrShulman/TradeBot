@@ -2,8 +2,6 @@ import json
 import logging
 from datetime import datetime
 
-from click import option
-
 from common.api.finance.greeks.greeks import Greeks
 from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.finance.amount import Amount

@@ -12,6 +12,7 @@ from common.api.orders.order_list_request import ListOrdersRequest
 from common.api.orders.order_list_response import ListOrdersResponse
 from common.api.orders.order_service import OrderService
 from common.api.orders.preview_order_request import PreviewOrderRequest
+from common.api.orders.preview_order_response import PreviewOrderResponse
 from common.exchange.connector import Connector
 from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.exchange.exchange_name import ExchangeName
@@ -133,7 +134,7 @@ class OexService:
             preview_order_request.order_metadata.account_id = account_id
 
         order_service: OrderService = self.order_services[ExchangeName[exchange.upper()]]
-        response = order_service.preview_order(preview_order_request)
+        response: PreviewOrderResponse = order_service.preview_order(preview_order_request)
 
         return jsonify(response)
 
