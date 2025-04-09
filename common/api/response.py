@@ -1,5 +1,7 @@
 from abc import ABC
 
+from pydantic import BaseModel
 
-class Response(ABC):
+
+class Response(ABC, BaseModel):
     pass

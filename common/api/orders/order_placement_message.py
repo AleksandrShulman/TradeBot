@@ -1,3 +1,5 @@
-class OrderPlacementMessage:
-    def __init__(self, message: str):
-        self.message = message
+from pydantic import BaseModel
+
+
+class OrderPlacementMessage(BaseModel):
+    message: str

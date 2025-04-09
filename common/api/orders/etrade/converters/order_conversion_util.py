@@ -90,7 +90,7 @@ class OrderConversionUtil:
             security_type = product["securityType"]
 
             if security_type == TradableType.Equity.value:
-                order_lines.append(OrderLine(equity, order_action, quantity, filled_quantity))
+                order_lines.append(OrderLine(tradable=equity, action=order_action, quantity=quantity, quantity_filled=filled_quantity))
             elif security_type == TradableType.Option.value:
                 call_put: OptionType = OptionType.from_str(product['callPut'])
                 expiry_year = product['expiryYear']
@@ -171,7 +171,7 @@ class OrderConversionUtil:
 
     @staticmethod
     def build_product_xml(tradable: Tradable) -> str:
-        security_type = TradableType[type(tradable).__name__].value[0]
+        security_type = TradableType[type(tradable).__name__].value
         if type(tradable) is Equity:
             e: Equity = tradable
             symbol = e.ticker

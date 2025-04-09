@@ -76,6 +76,7 @@ class ETradeOrderService(OrderService):
         url = self.base_url + path
         response = self.session.get(url, params=params)
 
+        # TODO: Add option to pull current price for all tradables - FIA-
         return ETradeOrderService._parse_get_order_response(response, account_id, order_id)
 
     def cancel_order(self, cancel_order_request: CancelOrderRequest) -> CancelOrderResponse:
@@ -247,7 +248,7 @@ class ETradeOrderService(OrderService):
             description = message['description']
             code = message['code']
             message_type = message['type']
-            messages.append(ETradeOrderResponseMessage(code, description, message_type))
+            messages.append(ETradeOrderResponseMessage(code=str(code), message=description, message_type=str(message_type)))
 
         # TODO: Why isn't this a PlacedOrder? b/c 'OrderDetail' isn't available from order_dict here.
         order: Order = OrderConversionUtil.to_order_from_json(order_dict)
@@ -255,7 +256,7 @@ class ETradeOrderService(OrderService):
         if previous_order_id:
             return PlaceModifyOrderResponse(order_metadata, preview_id, previous_order_id, order_id, order, messages)
         else:
-            return PlaceOrderResponse(order_metadata, preview_id, order_id, order, messages)
+            return PlaceOrderResponse(order_metadata=order_metadata, preview_id=str(preview_id), order_id=str(order_id), order=order, order_placement_messages=messages)
 
     @staticmethod
     def _parse_cancel_order_response(input, order_id:str)-> CancelOrderResponse:
@@ -314,13 +315,13 @@ class ETradeOrderService(OrderService):
         estimated_commission: Amount = Amount.from_float(order_dict["estimatedCommission"])
 
         order = OrderConversionUtil.to_order_from_json(order_dict)
-        order_preview: OrderPreview = OrderPreview(preview_id, order, estimated_total_amount, estimated_commission)
+        order_preview: OrderPreview = OrderPreview(preview_id=str(preview_id), order=order, total_order_value=estimated_total_amount, estimated_commission=estimated_commission)
 
         # how to check if it replaces order
         if previous_order_id:
             return PreviewModifyOrderResponse(order_metadata, preview_id, previous_order_id, order_preview, request_status=request_status)
         else:
-            return PreviewOrderResponse(order_metadata, preview_id, order_preview, request_status=request_status)
+            return PreviewOrderResponse(order_metadata=order_metadata, preview_id=str(preview_id), preview_order_info=order_preview, request_status=request_status)
 
     @staticmethod
     def _parse_order_list_response(response, account_id) -> list[PlacedOrder]:

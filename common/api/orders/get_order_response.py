@@ -4,7 +4,7 @@ from common.api.response import Response
 from common.order.placed_order import PlacedOrder
 
 
-class GetOrderResponse(BaseModel, Response):
+class GetOrderResponse(Response):
     placed_order: PlacedOrder
 
     def __str__(self):
