@@ -117,7 +117,7 @@ class OexService:
             return resp
 
         order_service: OrderService = self.order_services[ExchangeName[exchange.upper()]]
-        get_order_request = GetOrderRequest(account_id, order_id)
+        get_order_request = GetOrderRequest(account_id=account_id, order_id=order_id)
 
         resp: GetOrderResponse = order_service.get_order(get_order_request)
 

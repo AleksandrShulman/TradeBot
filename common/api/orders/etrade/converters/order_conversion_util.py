@@ -59,11 +59,11 @@ class OrderConversionUtil:
         bid_price = order_detail['netBid'] * -1
         ask_price = order_detail['netAsk'] * -1
 
-        current_market_price: Price = Price(bid_price, ask_price, mark_price)
+        current_market_price: Price = Price(bid=bid_price, ask=ask_price, mark=mark_price)
 
-        placed_order_details = PlacedOrderDetails(account_id, order_id, status, order_placed_time, current_market_price, market_session, replaces_order_id)
+        placed_order_details = PlacedOrderDetails(account_id=account_id, exchange_order_id=str(order_id), status=status, order_placed_time=order_placed_time, current_market_price=current_market_price, market_session=market_session, replaces_order_id=replaces_order_id)
 
-        return PlacedOrder(order, placed_order_details)
+        return PlacedOrder(order=order, placed_order_details=placed_order_details)
 
     @staticmethod
     def to_order_from_json(input_order: dict)->Order:

@@ -362,9 +362,9 @@ class ETradeOrderService(OrderService):
 
         if order["OrderDetail"][0]["status"] == OrderStatus.EXECUTED:
             executed_order = OrderConversionUtil.to_executed_order_from_json(order)
-            return GetOrderResponse(executed_order)
+            return GetOrderResponse(placed_order=executed_order)
         else:
-            return GetOrderResponse(placed_order)
+            return GetOrderResponse(placed_order=placed_order)
 
     @staticmethod
     def _build_preview_order_xml(order, order_type: OrderType, client_order_id: str)->str:
