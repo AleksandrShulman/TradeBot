@@ -86,7 +86,7 @@ def test_process_spread_preview_order_response(preview_order_spread_response):
 
 def test_process_spread_place_order_response_id_parsed(place_order_spread_response):
     response: PlaceOrderResponse = ETradeOrderService._parse_place_order_response(place_order_spread_response, SPREAD_ORDER_METADATA, SPREAD_ORDER_PREVIEW_ID)
-    assert PLACED_ORDER_ID == response.order_id
+    assert str(PLACED_ORDER_ID) == response.order_id
 
 def test_process_spread_place_order_response_order_parsed(place_order_spread_response):
     response: PlaceOrderResponse = ETradeOrderService._parse_place_order_response(place_order_spread_response, SPREAD_ORDER_METADATA, SPREAD_ORDER_PREVIEW_ID)
