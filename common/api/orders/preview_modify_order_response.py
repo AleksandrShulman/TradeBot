@@ -7,6 +7,6 @@ from common.api.request_status import RequestStatus
 
 
 class PreviewModifyOrderResponse(PreviewOrderResponse):
-    def __init__(self, order_metadata: OrderMetadata, preview_id, order_id, order_preview: OrderPreview, request_status:RequestStatus = RequestStatus.SUCCESS):
+    def __init__(self, order_metadata: OrderMetadata, preview_id, previous_order_id, order_preview: OrderPreview, request_status:RequestStatus = RequestStatus.SUCCESS):
         super().__init__(order_metadata, preview_id, order_preview, request_status=request_status)
-        self.order_id = order_id
+        self.previous_order_id: str = previous_order_id

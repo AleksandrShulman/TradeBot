@@ -291,7 +291,7 @@ class ETradeOrderService(OrderService):
                 code = error['code'] if 'code' in error else None
                 message = error['message'] if 'message' in error else None
 
-                order_placement_message: OrderPlacementMessage = ETradeOrderResponseMessage(code, description=message)
+                order_placement_message: OrderPlacementMessage = ETradeOrderResponseMessage(code=code, description=message)
 
                 if NOT_ENOUGH_SHARES_MSG_PORTION in message or code == PARTIAL_EXECUTED_CODE:
                     request_status = RequestStatus.FAILURE_RETRY_SUGGESTED
@@ -319,7 +319,7 @@ class ETradeOrderService(OrderService):
 
         # how to check if it replaces order
         if previous_order_id:
-            return PreviewModifyOrderResponse(order_metadata, preview_id, previous_order_id, order_preview, request_status=request_status)
+            return PreviewModifyOrderResponse(order_metadata=order_metadata, preview_id=preview_id, previous_order_id=str(previous_order_id), order_preview=order_preview, request_status=request_status)
         else:
             return PreviewOrderResponse(order_metadata=order_metadata, preview_id=str(preview_id), preview_order_info=order_preview, request_status=request_status)
 
