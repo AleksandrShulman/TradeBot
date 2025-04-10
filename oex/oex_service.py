@@ -11,6 +11,8 @@ from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_request import ListOrdersRequest
 from common.api.orders.order_list_response import ListOrdersResponse
 from common.api.orders.order_service import OrderService
+from common.api.orders.place_order_request import PlaceOrderRequest
+from common.api.orders.place_order_response import PlaceOrderResponse
 from common.api.orders.preview_order_request import PreviewOrderRequest
 from common.api.orders.preview_order_response import PreviewOrderResponse
 from common.exchange.connector import Connector
@@ -139,10 +141,20 @@ class OexService:
         return jsonify(response)
 
     def place_order(self, exchange, account_id: str, preview_id: str):
-        place_order_request_body: dict = request.form
-        return jsonify([])
-        pass
+        content_type = request.headers.get('Content-Type')
+        if (content_type != 'application/json'):
+            return 'Content-Type not supported!'
 
+        place_order_request = PlaceOrderRequest.model_validate(request.json)
+        if not place_order_request.order_metadata.account_id:
+            place_order_request.order_metadata.account_id = account_id
+
+        place_order_request.preview_id = preview_id
+
+        order_service: OrderService = self.order_services[ExchangeName[exchange.upper()]]
+        response: PlaceOrderResponse = order_service.place_order(place_order_request)
+
+        return jsonify(response)
 
     def preview_and_place_order(self, exchange, account_id: str, preview_id: str):
         preview_order_request_body: dict = request.form
