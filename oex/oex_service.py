@@ -10,12 +10,16 @@ from common.api.orders.get_order_request import GetOrderRequest
 from common.api.orders.get_order_response import GetOrderResponse
 from common.api.orders.order_list_request import ListOrdersRequest
 from common.api.orders.order_list_response import ListOrdersResponse
+from common.api.orders.order_metadata import OrderMetadata
 from common.api.orders.order_service import OrderService
+from common.api.orders.place_order_request import PlaceOrderRequest
+from common.api.orders.place_order_response import PlaceOrderResponse
 from common.api.orders.preview_order_request import PreviewOrderRequest
 from common.api.orders.preview_order_response import PreviewOrderResponse
 from common.exchange.connector import Connector
 from common.exchange.etrade.etrade_connector import ETradeConnector
 from common.exchange.exchange_name import ExchangeName
+from common.order.order import Order
 from common.order.order_status import OrderStatus
 from quotes.etrade.etrade_quote_service import ETradeQuoteService
 from quotes.quote_service import QuoteService
@@ -55,7 +59,6 @@ class OexService:
 
         self.app.add_url_rule(rule='/api/v1/<exchange>/<account_id>/orders/preview/<preview_id>', endpoint='place-order',
                               view_func=self.place_order, methods=['POST'])
-
 
         self.app.add_url_rule(rule='/api/v1/<exchange>/<account_id>/orders/preview_and_place', endpoint='preview-and-place-order',
                               view_func=self.preview_and_place_order, methods=['POST'])
@@ -139,15 +142,41 @@ class OexService:
         return jsonify(response)
 
     def place_order(self, exchange, account_id: str, preview_id: str):
-        place_order_request_body: dict = request.form
-        return jsonify([])
-        pass
+        content_type = request.headers.get('Content-Type')
+        if (content_type != 'application/json'):
+            return 'Content-Type not supported!'
 
+        place_order_request = PlaceOrderRequest.model_validate(request.json)
+        if not place_order_request.order_metadata.account_id:
+            place_order_request.order_metadata.account_id = account_id
 
-    def preview_and_place_order(self, exchange, account_id: str, preview_id: str):
-        preview_order_request_body: dict = request.form
-        return jsonify([])
-        pass
+        place_order_request.preview_id = preview_id
+
+        order_service: OrderService = self.order_services[ExchangeName[exchange.upper()]]
+        response: PlaceOrderResponse = order_service.place_order(place_order_request)
+
+        return jsonify(response)
+
+    def preview_and_place_order(self, exchange, account_id: str):
+        content_type = request.headers.get('Content-Type')
+        if (content_type != 'application/json'):
+            return 'Content-Type not supported!'
+
+        preview_order_request = PreviewOrderRequest.model_validate(request.json)
+        if not preview_order_request.order_metadata.account_id:
+            preview_order_request.order_metadata.account_id = account_id
+
+        order_service: OrderService = self.order_services[ExchangeName[exchange.upper()]]
+        preview_order_response: PreviewOrderResponse = order_service.preview_order(preview_order_request)
+        preview_id = preview_order_response.preview_id
+
+        order_metadata: OrderMetadata = preview_order_request.order_metadata
+        order: Order = preview_order_request.order
+
+        place_order_request: PlaceOrderRequest = PlaceOrderRequest(order_metadata=order_metadata, preview_id=preview_id,
+                                                                   order=order)
+        place_order_response: PlaceOrderResponse = order_service.place_order(place_order_request)
+        return jsonify(place_order_response)
 
 if __name__ == "__main__":
     from waitress import serve

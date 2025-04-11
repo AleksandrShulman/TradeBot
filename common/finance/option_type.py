@@ -1,10 +1,10 @@
 from enum import Enum
 
 
-class OptionType(Enum):
+class OptionType(str, Enum):
     # make this an enum for PUT or CALL
-    PUT = 0
-    CALL = 1
+    PUT = "PUT"
+    CALL = "CALL"
 
     @staticmethod
     def from_str(input:str):

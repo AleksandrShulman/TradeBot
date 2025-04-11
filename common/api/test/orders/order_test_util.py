@@ -71,6 +71,26 @@ class OrderTestUtil:
 
         return Order(expiry=GoodForDay(), order_lines=order_lines, order_price=order_price)
 
+
+    @staticmethod
+    def build_short_covered_call():
+        order_lines: list[OrderLine] = list()
+
+        equity = Equity(ticker="SFIX", company_nane="STITCH FIX INC COM CL A")
+        option_expiry: datetime.date = datetime(2025, 6, 20).date()
+        tradable1: Option = Option(equity=equity, type=OptionType.CALL, strike=Amount(whole=5, part=0, currency=Currency.US_DOLLARS), expiry=option_expiry)
+
+        ol_1 = OrderLine(tradable=equity, action=Action.SELL, quantity=100)
+        ol_2 = OrderLine(tradable=tradable1, action=Action.BUY_CLOSE, quantity=1)
+
+        order_price: OrderPrice = OrderPrice(order_price_type=OrderPriceType.NET_CREDIT, price=Amount(whole=2, part=99))
+
+        order_lines.append(ol_1)
+        order_lines.append(ol_2)
+
+        return Order(expiry=GoodForDay(), order_lines=order_lines, order_price=order_price)
+
+
     @staticmethod
     def build_calendar_spread():
         order_lines: list[OrderLine] = list()

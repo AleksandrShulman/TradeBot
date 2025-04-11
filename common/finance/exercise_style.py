@@ -3,10 +3,10 @@ from enum import Enum
 EUROPEAN_OPTIONS_SET = {"VIX", "VIXW", "SPX", "XSP"}
 
 
-class ExerciseStyle(Enum):
+class ExerciseStyle(str, Enum):
     # make this an enum for American or European
-    AMERICAN = 0
-    EUROPEAN = 1
+    AMERICAN = "AMERICAN"
+    EUROPEAN = "EUROPEAN"
 
     @staticmethod
     def from_ticker(ticker):
