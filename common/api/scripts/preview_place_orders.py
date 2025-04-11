@@ -110,7 +110,7 @@ def test_equity_order_for_preview_and_place(order_service: OrderService, account
     preview_order_response: PreviewOrderResponse = order_service.preview_order(preview_order_request)
     preview_id: str = preview_order_response.preview_id
 
-    place_order_request: PlaceOrderRequest = PlaceOrderRequest(order_metadata, preview_id, order)
+    place_order_request: PlaceOrderRequest = PlaceOrderRequest(order_metadata=order_metadata, preview_id=preview_id, order=order)
     place_order_response: PlaceOrderResponse = order_service.place_order(place_order_request)
 
     order_id = place_order_response.order_id
@@ -145,6 +145,8 @@ def test_option_order_for_preview_and_place(order_service: OrderService, account
 
     order = OrderTestUtil.build_short_covered_call()
     preview_order_request : PreviewOrderRequest = PreviewOrderRequest(order_metadata=order_metadata, order=order)
+    print(preview_order_request.model_dump_json())
+
     preview_order_response: PreviewOrderResponse = order_service.preview_order(preview_order_request)
     preview_id = preview_order_response.preview_id
 

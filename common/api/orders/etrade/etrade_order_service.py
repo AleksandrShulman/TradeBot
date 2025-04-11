@@ -291,7 +291,7 @@ class ETradeOrderService(OrderService):
                 code = error['code'] if 'code' in error else None
                 message = error['message'] if 'message' in error else None
 
-                order_placement_message: OrderPlacementMessage = ETradeOrderResponseMessage(code=code, description=message)
+                order_placement_message: OrderPlacementMessage = ETradeOrderResponseMessage(code=str(code), description=message)
 
                 if NOT_ENOUGH_SHARES_MSG_PORTION in message or code == PARTIAL_EXECUTED_CODE:
                     request_status = RequestStatus.FAILURE_RETRY_SUGGESTED
